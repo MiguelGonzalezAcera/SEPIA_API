@@ -84,14 +84,14 @@ preprocFCdata <- function(dbProjRows, genename) {
   }
   
   # Add a condition to clust_df for the color
-  clust_df$colorPlot <- ifelse(clust_df$log2FoldChange > 0, 'blue', 'red')
+  clust_df$colorPlot <- ifelse(clust_df$log2FoldChange > 0, 'Upreg', 'Downreg')
   
   # fix names as a factor
   clust_df$Comparison <- factor(clust_df$Comparison, levels = clust_df$Comparison)
   
   # Disconnect from database
   dbDisconnect(rnaseqDbFC)
-  
+
   # Return processed dataframe
   return(clust_df)
 }
@@ -176,6 +176,8 @@ preprocessing <- function(project, genename) {
 
 # Define server logic
 shinyServer(function(input, output) {
+  thematic::thematic_shiny()
+  
   preprocResultInput <- reactive({
     preprocessing(input$project, input$genename)
   })
@@ -187,8 +189,27 @@ shinyServer(function(input, output) {
   
   # Create and render barplot for fold change
   output$FCplot <- renderPlot({
-    ggplot(preprocResultInput()[['foldChangeData']]) +
+    FCdata <- preprocResultInput()[['foldChangeData']]
+    
+    # Select the max and min y value of the plot
+    if (max(FCdata$log2FoldChange) > 5) {
+      ymax <- max(FCdata$log2FoldChange) + 1
+    }else{
+      ymax <- 5
+    }
+    
+    if (min(FCdata$log2FoldChange) < -5) {
+      ymin <- min(FCdata$log2FoldChange) - 1
+    }else{
+      ymin <- -5 
+    }
+    
+    # run the plot
+    ggplot(FCdata) +
     geom_bar( aes(x=Comparison, y=log2FoldChange, fill = colorPlot), stat="identity") +
+    scale_fill_manual(values = c("Upreg" = "red",
+                                 "Downreg" = "blue")) +
+    ylim(ymin, ymax) +
     coord_flip()
   },
   height = 400, width = 600)
