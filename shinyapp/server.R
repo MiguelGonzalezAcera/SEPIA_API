@@ -302,7 +302,6 @@ shinyServer(function(input, output) {
     req(input$genename)
     sprintf('Fold change of %s in %s model', input$genename, input$project)
   })
-  
 
   # Render fold change table
   output$FCtable <- renderTable({
