@@ -74,6 +74,9 @@ preprocDCdataSingle <- function(project, genename) {
   # Ask the database for the table
   dbRNARowsFilt <- queryExperiment(project, genename)
   
+  # Add name of the project
+  dbRNARowsFilt['Comparison'] <- c(project)
+  
   # Return processed dataframe
   return(dbRNARowsFilt)
 }
@@ -86,7 +89,7 @@ preprocFCdata <- function(dbProjRows, genename) {
   # Loop to get the sets of data we need for the display
   for (i in c(1:nrow(dbProjRows))) {
     # Run the query database function
-    dbRNARowsFilt <- queryExperiment(dbProjRows[['Comparison']][i], genename)
+    dbRNARows <- queryExperiment(dbProjRows[['Comparison']][i], genename)
     
     # Filter the columns of the differential expression data
     dbRNARowsFilt <- dbRNARows[c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes')]
@@ -204,7 +207,7 @@ preprocessing <- function(project, genename) {
   # Generate lists of options for the displays
   fullExp <- list(
     "DSSTC" = "DSS_TimeCourse",
-    "WHTC" = "WoundHealing"
+    "WH" = "WoundHealing"
   )
   
   singleExp <- list(
@@ -306,6 +309,6 @@ shinyServer(function(input, output) {
   # Render fold change table
   output$FCtable <- renderTable({
     req(input$genename)
-    preprocResultInput()[['foldChangeData']][c('Genes','log2FoldChange','pvalue','padj')]
+    preprocResultInput()[['foldChangeData']][c('Comparison','log2FoldChange','pvalue','padj')]
   })
 })
