@@ -1,9 +1,10 @@
+box::use(
+  shiny[...],
+  shinythemes[...]
+)
+
 suppressPackageStartupMessages(library(shiny))
 suppressPackageStartupMessages(library(shinythemes))
-
-# Read genes reference
-mouseGenes <- read.table("/DATA/mouse_genes.tsv", sep = '\t')
-colnames(mouseGenes) <- c('Ensembl', 'Entrez', 'Genename')
 
 # Paste the code for the select input snippet. Sauce: https://mastering-shiny.org/action-dynamic.html
 make_ui <- function(x, var) {
