@@ -2,7 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   RMariaDB[...],
-  . / entities[fullExp,singleExp]
+  . / entities[fullExp,singleExp,geneLabels],
 )
 
 # Function for query project instances and comparisons
@@ -242,19 +242,23 @@ preprocessing <- function(project, genename) {
 }
 
 # Define server logic
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   thematic::thematic_shiny()
   
-  # Add default text for the page. It will disappear once we ask for a gene
-  output$defaultText <- renderText({
-    if (input$genename == "") {
-      "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn. Ph'orr'e k'yarnak shtunggli stell'bsna n'ghaagl uln fhtagn, mnahn'og hupadgh ron gnaiih kadishtu ch' n'ghaoth Dagonor gof'nn ph'ehye. Nnngotha nghrii nog cn'gha s'uhn ilyaa Shub-Niggurath ah Hastur y'hahyar, nglui athg n'gha mnahn' hupadgh Nyarlathotep y-vulgtlagln hrii zhronyth Azathothyar, ftaghu nnnChaugnar Faugn f'Azathoth kn'a tharanak nw ah gotha. Ep f'mg k'yarnak ebunma lw'nafh fhtagn nnnehye 'bthnk grah'n naflzhro chtenff lw'nafh phlegeth lloig ronog, ftaghu nw goka shtunggli hafh'drn hai shugg nwoth Nyarlathotep y-r'luh ooboshu chtenff. Ph'Nyarlathotep gof'nn vulgtm ph'gotha Dagon ph'Cthulhu ah Azathoth, goka hafh'drn h'bug ooboshu h'Shub-Niggurath ya ph'ooboshu bug, s'uhn shogg stell'bsna fm'latgh athg li'hee."
-    }
-  })
+  # Update gene selector with existing labels
+  updateSelectizeInput(
+    session,
+    "genename",
+    choices = geneLabels$mouse_genes,
+    selected = c("Ifng", "Il6"),
+    server = TRUE
+  )
   
   # Preprocess the data
   preprocResultInput <- reactive({
     req(input$genename)
+    print(input$genename)
+    print(class(input$genename))
     preprocessing(input$project, input$genename)
   })
   

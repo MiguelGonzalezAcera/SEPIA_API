@@ -1,4 +1,6 @@
-box::use()
+box::use(
+  utils[...]
+)
 
 # Generate lists of options for the displays
 #' @export
@@ -20,4 +22,9 @@ singleExp <- list(
   "C8KOc" = list("project" = "Casp8Colon", "tabid" = "Casp8Colon_Col_Casp8dIEC_Col_Casp8flox"),
   "EvInf" = list("project" = "Eimeria_vermiformis_model", "tabid" = "Eimeria_vermiformis_model_EV_WT"),
   "HhInf" = list("project" = "HhColitis", "tabid" = "HhColitis_HhCol_SSt")
+)
+
+#' @export
+geneLabels <- list(
+  'mouse_genes' = unique(as.vector(read.csv("/DATA/mouse_genes.tsv", sep = '\t', header = FALSE)[['V3']]))
 )

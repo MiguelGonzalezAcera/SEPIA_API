@@ -3,9 +3,6 @@ box::use(
   shinythemes[...]
 )
 
-suppressPackageStartupMessages(library(shiny))
-suppressPackageStartupMessages(library(shinythemes))
-
 # Paste the code for the select input snippet. Sauce: https://mastering-shiny.org/action-dynamic.html
 make_ui <- function(x, var) {
   if (is.numeric(x)) {
@@ -54,8 +51,13 @@ shinyUI(fluidPage(
                      )
                 ),
     
-    textInput("genename", "Genename:",
-              value = '', placeholder = 'S100a8'),
+    selectizeInput(
+      "genename",
+      label = NULL,
+      choices = NULL,
+      multiple = TRUE,
+      width = "100%"
+    ),
 
     checkboxInput("timecourse", "Is Time Course", FALSE),
     
@@ -64,7 +66,6 @@ shinyUI(fluidPage(
   
   # Show the caption and plot of the requested variable against mpg
   mainPanel(
-    p(textOutput("defaultText")),
     h3(textOutput("resultTitleCounts")),
     br(),
     plotOutput("countsPlot"),
