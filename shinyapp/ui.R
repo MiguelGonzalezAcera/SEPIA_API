@@ -68,7 +68,7 @@ shinyUI(fluidPage(
   mainPanel(
     h3(textOutput("resultTitleCounts")),
     br(),
-    plotOutput("countsPlot"),
+    uiOutput("countsPlot_ui"),
     br(),
     h3(textOutput("resultTitle")),
     br(),
