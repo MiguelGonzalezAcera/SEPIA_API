@@ -2,6 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   RMariaDB[...],
+  dplyr[...],
   . / entities[fullExp,singleExp,geneLabels],
 )
 
@@ -112,59 +113,44 @@ preprocFCdata <- function(dbProjRows, genename) {
     }
   }
   
-  # Add a condition to clust_df for the color
-  clust_df$colorPlot <- ifelse(clust_df$log2FoldChange > 0, 'Upreg', 'Downreg')
-  
-  # fix names as a factor
-  clust_df$Comparison <- factor(clust_df$Comparison, levels = clust_df$Comparison)
-
   # Return processed dataframe
   return(clust_df)
 }
 
 # Function for the counts data on a single experiment
 preprocCountsData <- function(dbProjRows, dbDesRows, genename) {
-  # Create the vector for containment
-  meanList = list()
-  errorList = list()
-  
-  # Select the particular controls and samples IDs
+  # Get a dataframe with the columns of the fold change of all the samples
+  countsDf <- NULL
   
   # Loop to get the sets of data we need for the display
   for (i in c(1:nrow(dbProjRows))) {
-    # Run the query database function
-    dbRNARows <- queryExperiment(dbProjRows[['Comparison']][i], genename)
+    # Run the single id for each project
+    countsDfTmp <- preprocCountsDataSingle(dbProjRows[['Comparison']][i], dbDesRows, genename)
     
-    # Get data for control
-    controlRows <- dbRNARows[,dbDesRows[dbDesRows$Treatment == dbProjRows[['Control']][i],][['Sample']]]
-    
-    # Compute meam and std
-    meanList[[dbProjRows[['Control']][i]]] = mean(as.list(as.data.frame(t(controlRows)))[[1]])
-    errorList[[dbProjRows[['Control']][i]]] = sd(as.list(as.data.frame(t(controlRows)))[[1]])
-    
-    # Get data for sample
-    controlRows <- dbRNARows[,dbDesRows[dbDesRows$Treatment == dbProjRows[['Sample']][i],][['Sample']]]
-    
-    # Compute meam and std
-    meanList[[dbProjRows[['Sample']][i]]] = mean(as.list(as.data.frame(t(controlRows)))[[1]])
-    errorList[[dbProjRows[['Sample']][i]]] = sd(as.list(as.data.frame(t(controlRows)))[[1]])
+    # Merge the piece of data
+    if (is.null(countsDf) == T){
+      # If the final df is empty, fill it with one column
+      countsDf <- countsDfTmp
+    } else {
+      # If not, add the column to the df
+      countsDf <- rbind(countsDf, countsDfTmp)
+    }
   }
   
-  # Fix mean and std lists as dataframe
-  countsDf <- data.frame(
-    sample = factor(names(meanList), levels=names(meanList)),
-    means = unlist(meanList, use.names = FALSE),
-    error = unlist(errorList, use.names = FALSE),
-    errorSup = unlist(meanList, use.names = FALSE) + unlist(errorList, use.names = FALSE),
-    errorInf = unlist(meanList, use.names = FALSE) - unlist(errorList, use.names = FALSE),
-    stringsAsFactors = FALSE
-  )
-  
-  # Reassign negative errors to 0
-  countsDf$errorInf[countsDf$errorInf<0] <- 0
+  # Group by treatment and genename
+  countsDfGr <- countsDf %>% group_by(Treatment, Genename) %>% summarise(CountsMean = mean(Counts), CountsErrSup = mean(Counts) + sd(Counts), CountsErrInf = mean(Counts) - sd(Counts))
+  # Transform to dataframe
+  countsDfGr <- data.frame(countsDfGr)
+  # Merge with design in order to keep the order
+  countsDfGrMer <- merge(x=dbDesRows, y=countsDfGr, by='Treatment', all.y=TRUE)
+  # Order by the intended ID, keep the interesting columns, drop duplicated rows
+  countsDfFinal <- unique(countsDfGrMer[order(countsDfGrMer$ID), c('Treatment','Genename','CountsMean','CountsErrSup','CountsErrInf')])
+  # Turn treatment into a character vector and then back into a factor to keep order of treatments in the plot
+  countsDfFinal$Treatment <- as.character(countsDfFinal$Treatment)
+  countsDfFinal$Treatment <- factor(countsDfFinal$Treatment, levels=unique(countsDfFinal$Treatment))
   
   # Return processed dataframe
-  return(countsDf)
+  return(countsDfFinal)
 }
 
 # Function for the counts data
@@ -218,9 +204,6 @@ preprocessing <- function(project, genename) {
     # Get the fold change data
     countsDf <- preprocCountsData(dbProjRows, dbDesRows, genename)
   } else if (project %in% names(singleExp)) {
-    # Get data from the project
-    dbProjRows <- projectPreproc(singleExp[[project]][['project']])
-
     # Get data from the project design
     dbDesRows <- designPreproc(singleExp[[project]][['project']])
     
@@ -277,9 +260,10 @@ shinyServer(function(input, output, session) {
     req(input$genename)
     if (input$timecourse) {
       ggplot(preprocResultInput()[['countsData']]) +
-        geom_line(aes(x=sample, y=means, group=1), color="red") +
-        geom_point(aes(x=sample, y=means)) +
-        geom_errorbar(aes(x=sample, ymin=errorInf, ymax=errorSup), width=0.4, colour="orange")
+        geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
+        geom_point(aes(x=Treatment, y=CountsMean)) +
+        facet_wrap(~Genename, scales="free_y", ncol=3) +
+        geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
     }else{
       ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
         geom_boxplot()+
