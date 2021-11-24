@@ -61,7 +61,9 @@ shinyUI(fluidPage(
 
     checkboxInput("timecourse", "Is Time Course", FALSE),
     
-    submitButton("Update View")
+    submitButton("Update View"),
+    
+    width = 3
   ),
   
   # Show the caption and plot of the requested variable against mpg
