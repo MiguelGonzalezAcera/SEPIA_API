@@ -1,12 +1,12 @@
 box::use(
   shiny[...],
-  ggplot2[...],
   RMariaDB[...],
   dplyr[...],
+  stats[...],
   . / entities[fullExp,singleExp,geneLabels],
 )
 
-# Function for query project instances and comparisons
+#' @export
 projectPreproc <- function(project) {
   # Establish the connection to the projects database
   projectsDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Projects', host='localhost')
@@ -28,7 +28,7 @@ projectPreproc <- function(project) {
   return(dbProjRows)
 }
 
-# Function for query design of project
+#' @export
 designPreproc <- function(project) {
   # Establish the connection to the projects database
   designDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Designs', host='localhost')
@@ -50,7 +50,7 @@ designPreproc <- function(project) {
   return(dbDesRows)
 }
 
-# function to query an experiment
+#' @export
 queryExperiment <- function(tabname, genename) {
   # Establish the connection to the database
   dbconnection <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='RNAseq', host='localhost')
@@ -75,7 +75,7 @@ queryExperiment <- function(tabname, genename) {
   return(dbRNARows)
 }
 
-# Function for asking a single table. This is shit code design, but that's what we are doing today
+#' @export
 preprocDCdataSingle <- function(project, genename) {
   # Ask the database for the table
   dbRNARowsFilt <- queryExperiment(project, genename)
@@ -87,7 +87,7 @@ preprocDCdataSingle <- function(project, genename) {
   return(dbRNARowsFilt)
 }
 
-# Function for the fold change data
+#' @export
 preprocFCdata <- function(dbProjRows, genename) {
   # Get a dataframe with the columns of the fold change of all the samples
   clust_df <- NULL
@@ -117,7 +117,7 @@ preprocFCdata <- function(dbProjRows, genename) {
   return(clust_df)
 }
 
-# Function for the counts data on a single experiment
+#' @export
 preprocCountsData <- function(dbProjRows, dbDesRows, genename) {
   # Get a dataframe with the columns of the fold change of all the samples
   countsDf <- NULL
@@ -153,7 +153,7 @@ preprocCountsData <- function(dbProjRows, dbDesRows, genename) {
   return(countsDfFinal)
 }
 
-# Function for the counts data
+#' @export
 preprocCountsDataSingle <- function(project, dbDesRows, genename) {
   # Run the query database function
   dbRNARows <- queryExperiment(project, genename)
@@ -188,7 +188,7 @@ preprocCountsDataSingle <- function(project, dbDesRows, genename) {
   return(fdf)
 }
 
-# create the function to obtain both tables given a generate and a project
+#' @export
 preprocessing <- function(project, genename) {
   # Choose between single experiment and complete sequentiations
   if (project %in% names(fullExp)){
@@ -221,75 +221,3 @@ preprocessing <- function(project, genename) {
   # Return result
   return(preprocResult)
 }
-
-# Define server logic
-shinyServer(function(input, output, session) {
-  thematic::thematic_shiny()
-  
-  # Update gene selector with existing labels
-  updateSelectizeInput(
-    session,
-    "genename",
-    choices = geneLabels$mouse_genes,
-    selected = c("S100a8","Vil1"),
-    server = TRUE
-  )
-  
-  # Preprocess the data
-  preprocResultInput <- reactive({
-    req(input$genename)
-    preprocessing(input$project, input$genename)
-  })
-  
-  # Render title of counts plot
-  output$resultTitleCounts <- renderText({
-    req(input$genename)
-    sprintf('Counts of the selected genes in %s model', input$project)
-  })
-  
-  # Make dimensions for the plot
-  plot_dimensions <- reactive({
-    list(
-      heigth = max(300, ifelse(length(input$genename) %% 3 == 0, 300*(trunc(length(input$genename)/3)), 300*(1+trunc(length(input$genename)/3)))),
-      width = ifelse(length(input$genename) <= 1, 300, ifelse(length(input$genename) <= 2, 600, 900))
-    )
-  })
-  
-  # Create and render barplot for counts
-  output$countsPlot <- renderPlot({
-    req(input$genename)
-    if (input$timecourse) {
-      ggplot(preprocResultInput()[['countsData']]) +
-        geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
-        geom_point(aes(x=Treatment, y=CountsMean)) +
-        facet_wrap(~Genename, scales="free_y", ncol=3) +
-        geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
-    }else{
-      ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
-        geom_boxplot()+
-        facet_wrap(~Genename, scales="free_y", ncol=3)
-      # ggplot(preprocResultInput()[['countsData']]) +
-      #   geom_bar(aes(x=sample, y=means), stat="identity", fill="skyblue") +
-      #   geom_errorbar(aes(x=sample, ymin=errorInf, ymax=errorSup), width=0.4, colour="orange") +
-      #   ylim(0,NA) + 
-      #   coord_flip()
-    }
-  })
-  
-  # Wrap in ui for dynamism
-  output$countsPlot_ui <- renderUI({
-    plotOutput("countsPlot", height = plot_dimensions()$heigth, width = plot_dimensions()$width)
-  })
-  
-  # Render the title
-  output$resultTitle <- renderText({
-    req(input$genename)
-    sprintf('Fold change of the selected genes in %s model', input$project)
-  })
-
-  # Render fold change table
-  output$FCtable <- renderTable({
-    req(input$genename)
-    preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
-  })
-})
