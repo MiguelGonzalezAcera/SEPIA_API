@@ -52,7 +52,7 @@ designPreproc <- function(project) {
 }
 
 #' @export
-queryExperiment <- function(tabname, genename) {
+queryExperiment <- function(tabname, genename = c()) {
   # Establish the connection to the database
   dbconnection <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='RNAseq', host='localhost')
   
@@ -63,8 +63,10 @@ queryExperiment <- function(tabname, genename) {
   rsRNAFCInsert <- dbSendQuery(dbconnection, queryRNAText)
   dbRNARows<-dbFetch(rsRNAFCInsert)
 
-  # filter by genename(s)
-  dbRNARows <- subset(dbRNARows, dbRNARows$Genes %in% genename)
+  # filter by genename(s) if genelist has genes
+  if (length(genename) > 0) {
+    dbRNARows <- subset(dbRNARows, dbRNARows$Genes %in% genename)
+  }
   
   # Clear query
   dbClearResult(rsRNAFCInsert)
@@ -231,6 +233,52 @@ preprocessing <- function(project, genename) {
   preprocResult = list(foldChangeData = clust_df,
                        countsData = countsDf,
                        plotData = plotDf)
+  
+  # Return result
+  return(preprocResult)
+}
+
+#' @export
+preprocComparisons <- function(projectA, projectB, genename) {
+  # Ask the database for the table for experiment A
+  dbRNARowsA <- queryExperiment(singleExp[[projectA]][['tabid']])
+  dbRNARowsFiltA <- dbRNARowsA[c('id','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+  
+  # Filter by p value threshold
+  dbRNARowsFiltA <- dbRNARowsFiltA[dbRNARowsFiltA$padj < 0.05,]
+  
+  # Add name of the project A
+  dbRNARowsFiltA['Comparison'] <- c(projectA)
+  
+  # Repeat for project B
+  dbRNARowsB <- queryExperiment(singleExp[[projectB]][['tabid']])
+  dbRNARowsFiltB <- dbRNARowsB[c('id','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+  dbRNARowsFiltB <- dbRNARowsFiltB[dbRNARowsFiltB$padj < 0.05,]
+  dbRNARowsFiltB['Comparison'] <- c(projectB)
+  
+  # Merge both dataframes according to gene
+  dbRNARowsMerg <- merge(dbRNARowsFiltA, dbRNARowsFiltB, by=c('EnsGenes','Genes'), all = FALSE)
+  
+  # Create the base plot
+  plot2 <- ggplot(dbRNARowsMerg, aes(x=log2FoldChange.x, y=log2FoldChange.y)) + 
+    geom_hline(yintercept=0, color = "orange") + 
+    geom_vline(xintercept=0, color = "orange") +
+    xlab(sprintf("Log2 Fold Change of %s", projectA)) + 
+    ylab(sprintf("Log2 Fold Change of %s", projectB))
+  
+  # Display all of the genes or only the listed ones
+  if (length(genename) == 0) {
+    plot2 <- plot2 + geom_point(colour='black') + geom_hline(yintercept=0) + geom_vline(xintercept=0)
+  } else {
+    # Select only the rows with the genes
+    dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
+    plot2 <- plot2 + 
+      geom_point(colour='grey') + 
+      geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red')
+  }
+  
+  # Attach all results to a named list for returning
+  preprocResult = list(plotData = plot2)
   
   # Return result
   return(preprocResult)
