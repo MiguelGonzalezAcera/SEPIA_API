@@ -1,8 +1,7 @@
 box::use(
   shiny[...],
-  ggplot2[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[geneLabels]
+  .. / shinyapp / entities[geneLabels,imgLabels]
 )
 
 #' @export
@@ -11,7 +10,7 @@ ui <- function(id) {
   div(
     titlePanel(
       title = div(
-        img(src = "logo1.png", height = 100),
+        img(src = imgLabels$logo1, height = 100),
         br(),
         "SEpIa"
       )
@@ -46,8 +45,6 @@ ui <- function(id) {
         multiple = TRUE,
         width = "100%"
       ),
-      
-      checkboxInput(ns("timecourse"), "Is Time Course", FALSE),
       
       submitButton("Update View"),
       
@@ -103,17 +100,7 @@ server <- function(input, output, session) {
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
     req(input$genename)
-    if (input$timecourse) {
-      ggplot(preprocResultInput()[['countsData']]) +
-        geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
-        geom_point(aes(x=Treatment, y=CountsMean)) +
-        facet_wrap(~Genename, scales="free_y", ncol=3) +
-        geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
-    }else{
-      ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
-        geom_boxplot()+
-        facet_wrap(~Genename, scales="free_y", ncol=3)
-    }
+    preprocResultInput()[['plotData']]
   })
   
   # Wrap in ui for dynamism

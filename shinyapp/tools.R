@@ -3,6 +3,7 @@ box::use(
   RMariaDB[...],
   dplyr[...],
   stats[...],
+  ggplot2[...],
   . / entities[fullExp,singleExp,geneLabels],
 )
 
@@ -203,6 +204,13 @@ preprocessing <- function(project, genename) {
     
     # Get the fold change data
     countsDf <- preprocCountsData(dbProjRows, dbDesRows, genename)
+    
+    # Create the plot
+    plotDf <- ggplot(countsDf) +
+      geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
+      geom_point(aes(x=Treatment, y=CountsMean)) +
+      facet_wrap(~Genename, scales="free_y", ncol=3) +
+      geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
   } else if (project %in% names(singleExp)) {
     # Get data from the project design
     dbDesRows <- designPreproc(singleExp[[project]][['project']])
@@ -212,11 +220,17 @@ preprocessing <- function(project, genename) {
 
     # Get the fold change data
     countsDf <- preprocCountsDataSingle(singleExp[[project]][['tabid']], dbDesRows, genename)
+    
+    # Create the plot
+    plotDf <- ggplot(countsDf, aes(x=Treatment, y=Counts))+
+      geom_boxplot()+
+      facet_wrap(~Genename, scales="free_y", ncol=3)
   }
   
   # Attach both dataframes on a named list for returning
   preprocResult = list(foldChangeData = clust_df,
-                       countsData = countsDf)
+                       countsData = countsDf,
+                       plotData = plotDf)
   
   # Return result
   return(preprocResult)
