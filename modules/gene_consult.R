@@ -8,14 +8,6 @@ box::use(
 ui <- function(id) {
   ns <- NS(id)
   div(
-    titlePanel(
-      title = div(
-        img(src = imgLabels$logo1, height = 100),
-        br(),
-        "SEpIa"
-      )
-    ),
-    
     # Application title
     headerPanel("Gene query"),
     
