@@ -14,17 +14,17 @@ router <- make_router(
 )
 
 ui <- fluidPage(
-  theme = shinytheme("superhero"),
+  theme = "/static/main.css",
+  tags$ul(
+    tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
+    tags$li(a(href = route_link("model_comparison"), "Model Comparison"))
+  ),
   titlePanel(
     title = div(
       img(src = "/static/logo1.png", height = 100),
       br(),
       "SEpIa"
     )
-  ),
-  tags$ul(
-    tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
-    tags$li(a(href = route_link("model_comparison"), "Model Comparison"))
   ),
   router$ui
 )

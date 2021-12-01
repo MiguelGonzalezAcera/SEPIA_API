@@ -95,5 +95,5 @@ server <- function(input, output, session) {
     req(input$projectB)
     preprocComparisonsInput()[['plotData']]
   },
-  height = 1000, width = 1000)
+  height = 750, width = 750)
 }

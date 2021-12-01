@@ -4,6 +4,7 @@ box::use(
   dplyr[...],
   stats[...],
   ggplot2[...],
+  ggpubr[...],
   . / entities[fullExp,singleExp,geneLabels],
 )
 
@@ -268,12 +269,16 @@ preprocComparisons <- function(projectA, projectB, genename) {
   
   # Display all of the genes or only the listed ones
   if (length(genename) == 0) {
-    plot2 <- plot2 + geom_point(colour='black') + geom_hline(yintercept=0) + geom_vline(xintercept=0)
+    plot2 <- plot2 + geom_point(colour='black') + geom_smooth(method=lm, formula = y ~ x) + 
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..))
   } else {
     # Select only the rows with the genes
     dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
     plot2 <- plot2 + 
-      geom_point(colour='grey') + 
+      geom_point(colour='grey') + geom_smooth(method=lm, formula = y ~ x) +
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) + 
       geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red')
   }
   
