@@ -1,7 +1,7 @@
 box::use(
   shiny[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[geneLabels,imgLabels]
+  .. / shinyapp / entities[geneLabels,imgLabels,displayNames]
 )
 
 #' @export
@@ -13,22 +13,7 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
-      selectInput(ns("project"), "Project:",
-                  list("Acute DSS" = "AcDSS",
-                       "Chronic DSS" = "cDSS",
-                       "Oxazolone colitis" = "OxC",
-                       "T cell transfer colitis" = "TC",
-                       "TNF-dARE colitis" = "TdAc",
-                       "TNF-dARE ileitis" = "TdAi",
-                       "Acute TNBS colitis" = "AcTNBS",
-                       "Chronic TNBS colitis" = "cTNBS",
-                       "Casp8 KO colitis" = "C8KOc",
-                       "DSS time course" = "DSSTC", 
-                       "Wound Healing" = "WH",
-                       "Eimeria vermiformis infection" = "EvInf",
-                       "Helicobacter colitis infection" = "HhInf"
-                  )
-      ),
+      selectInput(ns("project"), "Project:", displayNames),
       
       selectizeInput(
         ns("genename"),
@@ -78,7 +63,7 @@ server <- function(input, output, session) {
   # Render title of counts plot
   output$resultTitleCounts <- renderText({
     req(input$genename)
-    sprintf('Counts of the selected genes in %s model', input$project)
+    sprintf('Counts of the selected genes in %s model', names(displayNames)[match(input$project,displayNames)])
   })
   
   # Make dimensions for the plot
@@ -103,7 +88,7 @@ server <- function(input, output, session) {
   # Render the title
   output$resultTitle <- renderText({
     req(input$genename)
-    sprintf('Fold change of the selected genes in %s model', input$project)
+    sprintf('Fold change of the selected genes in %s model', names(displayNames)[match(input$project,displayNames)])
   })
   
   # Render fold change table

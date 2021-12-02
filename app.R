@@ -3,12 +3,14 @@ box::use(
   shiny.router[...],
   shinythemes[...],
   . / modules / gene_consult,
-  . / modules / model_comparison
+  . / modules / model_comparison,
+  . / modules / introduction
 )
 
 addResourcePath('static', '/DATA/RNAseq_test/API_shiny/static/')
 
 router <- make_router(
+  route("/", introduction$ui("introduction")),
   route("gene_consult", gene_consult$ui("gene_consult")),
   route("model_comparison", model_comparison$ui("model_comparison"))
 )
@@ -16,6 +18,7 @@ router <- make_router(
 ui <- fluidPage(
   theme = "/static/main.css",
   tags$ul(
+    tags$li(a(href = route_link("/"), "Home")),
     tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
     tags$li(a(href = route_link("model_comparison"), "Model Comparison"))
   ),
@@ -31,6 +34,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   router$server(input, output, session)
+  callModule(introduction$server, "introduction")
   callModule(gene_consult$server, "gene_consult")
   callModule(model_comparison$server, "model_comparison")
 }

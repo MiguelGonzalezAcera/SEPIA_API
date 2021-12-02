@@ -5,7 +5,7 @@ box::use(
   stats[...],
   ggplot2[...],
   ggpubr[...],
-  . / entities[fullExp,singleExp,geneLabels],
+  . / entities[fullExp,singleExp,geneLabels,displayNames],
 )
 
 #' @export
@@ -264,8 +264,8 @@ preprocComparisons <- function(projectA, projectB, genename) {
   plot2 <- ggplot(dbRNARowsMerg, aes(x=log2FoldChange.x, y=log2FoldChange.y)) + 
     geom_hline(yintercept=0, color = "orange") + 
     geom_vline(xintercept=0, color = "orange") +
-    xlab(sprintf("Log2 Fold Change of %s", projectA)) + 
-    ylab(sprintf("Log2 Fold Change of %s", projectB))
+    xlab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectA,displayNames)])) + 
+    ylab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectB,displayNames)]))
   
   # Display all of the genes or only the listed ones
   if (length(genename) == 0) {
