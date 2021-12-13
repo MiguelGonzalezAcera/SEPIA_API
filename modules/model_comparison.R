@@ -19,7 +19,7 @@ ui <- function(id) {
       
       selectizeInput(
         ns("genename"),
-        label = NULL,
+        label = "Gene names (optional): ",
         choices = NULL,
         multiple = TRUE,
         width = "100%"

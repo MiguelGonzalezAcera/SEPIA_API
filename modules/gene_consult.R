@@ -15,11 +15,17 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
-      selectInput(ns("project"), "Project:", displayNames),
-      
       selectizeInput(
         ns("genename"),
-        label = "Gene names: ",
+        label = "Gene name: ",
+        choices = NULL,
+        multiple = FALSE,
+        width = "100%"
+      ),
+      
+      selectizeInput(
+        ns("project"),
+        label = "Project:",
         choices = NULL,
         multiple = TRUE,
         width = "100%"
@@ -52,14 +58,22 @@ server <- function(input, output, session) {
     session,
     "genename",
     choices = geneLabels$mouse_genes,
-    selected = c("S100a8","Vil1"),
+    selected = c('S100a8'),
+    server = TRUE
+  )
+  
+  updateSelectizeInput(
+    session,
+    "project",
+    choices = displayNames,
+    selected = c("AcDSS", "cDSS"),
     server = TRUE
   )
   
   # Preprocess the data
   preprocResultInput <- reactive({
     req(input$genename)
-    preprocessing(c(input$project), input$genename)
+    preprocessing(input$project, input$genename)
   })
   
   # Render title of counts plot
@@ -71,25 +85,17 @@ server <- function(input, output, session) {
   # Make dimensions for the plot
   plot_dimensions <- reactive({
     list(
-      heigth = max(300, ifelse(length(input$genename) %% 3 == 0, 300*(trunc(length(input$genename)/3)), 300*(1+trunc(length(input$genename)/3)))),
-      width = ifelse(length(input$genename) <= 1, 300, ifelse(length(input$genename) <= 2, 600, 900))
+      heigth = max(300, ifelse(length(input$project) %% 3 == 0, 300*(trunc(length(input$project)/3)), 300*(1+trunc(length(input$project)/3)))),
+      width = ifelse(length(input$project) <= 1, 300, ifelse(length(input$project) <= 2, 600, 900))
     )
   })
   
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
     req(input$genename)
-    if (input$project %in% names(fullExp)) {
-      ggplot(preprocResultInput()[['countsData']]) +
-        geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
-        geom_point(aes(x=Treatment, y=CountsMean)) +
-        facet_wrap(~Genename, scales="free_y", ncol=3) +
-        geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
-    } else if (input$project %in% names(singleExp)) {
-      ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
-        geom_boxplot()+
-        facet_wrap(~Genename, scales="free_y", ncol=3)
-    }
+    ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
+      geom_boxplot()+
+      facet_wrap(~Comparison, scales="free", ncol=3)
   })
   
   # Wrap in ui for dynamism

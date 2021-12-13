@@ -188,52 +188,66 @@ preprocCountsDataSingle <- function(project, dbDesRows, genename) {
     }
   }
   
+  # Add project column
+  fdf['Comparison'] = project
+  
   # Return processed dataframe
   return(fdf)
 }
 
 #' @export
 preprocessing <- function(project, genename) {
-  # Choose between single experiment and complete sequentiations
-  if (project %in% names(fullExp)){
-    # Get data from the project
-    dbProjRows <- projectPreproc(fullExp[[project]])
-    
-    # Get data from the project design
-    dbDesRows <- designPreproc(fullExp[[project]])
-    
-    # Get the fold change data
-    clust_df <- preprocFCdata(dbProjRows, genename)
-    
-    # Get the fold change data
-    countsDf <- preprocCountsData(dbProjRows, dbDesRows, genename)
-    
-    # Create the plot
-    plotDf <- ggplot(countsDf) +
-      geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
-      geom_point(aes(x=Treatment, y=CountsMean)) +
-      facet_wrap(~Genename, scales="free_y", ncol=3) +
-      geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
-  } else if (project %in% names(singleExp)) {
-    # Get data from the project design
-    dbDesRows <- designPreproc(singleExp[[project]][['project']])
-    
-    # Get the table of asking
-    clust_df <- preprocDCdataSingle(singleExp[[project]][['tabid']], genename)
-
-    # Get the fold change data
-    countsDf <- preprocCountsDataSingle(singleExp[[project]][['tabid']], dbDesRows, genename)
-    
-    # Create the plot
-    plotDf <- ggplot(countsDf, aes(x=Treatment, y=Counts))+
-      geom_boxplot()+
-      facet_wrap(~Genename, scales="free_y", ncol=3)
-  }
+  # Init result dataframes
+  clust_df <- NULL
+  countsDf <- NULL
   
+  # Loop through the projects
+  for (proj in project) {
+    # Choose between single experiment and complete sequentiations
+    if (proj %in% names(fullExp)){
+      # Get data from the project
+      dbProjRows <- projectPreproc(fullExp[[proj]])
+      
+      # Get data from the project design
+      dbDesRows <- designPreproc(fullExp[[proj]])
+      
+      # Get the fold change data
+      clust_df_tmp <- preprocFCdata(dbProjRows, genename)
+      # Get the fold change data
+      countsDf_tmp <- preprocCountsData(dbProjRows, dbDesRows, genename)
+    } else if (proj %in% names(singleExp)) {
+      # Get data from the project design
+      dbDesRows <- designPreproc(singleExp[[proj]][['project']])
+      
+      # Get the table of asking
+      clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
+      # Get the fold change data
+      countsDf_tmp <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, genename)
+    }
+    
+    # Merge the fold change data
+    if (is.null(clust_df) == T){
+      # If the final df is empty, fill it with one column
+      clust_df <- clust_df_tmp
+    } else {
+      # If not, add the column to the df. Select columns if this is the case
+      clust_df <- clust_df[c('id','Comparison','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+      clust_df_tmp <- clust_df_tmp[c('id','Comparison','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+      clust_df <- rbind(clust_df, clust_df_tmp)
+    }
+    
+    if (is.null(countsDf) == T){
+      # If the final df is empty, fill it with one column
+      countsDf <- countsDf_tmp
+    } else {
+      # If not, add the column to the df
+      countsDf <- rbind(countsDf, countsDf_tmp)
+    }
+  }
   # Attach both dataframes on a named list for returning
   preprocResult = list(foldChangeData = clust_df,
-                       countsData = countsDf,
-                       plotData = plotDf)
+                       countsData = countsDf
+                       )
   
   # Return result
   return(preprocResult)
