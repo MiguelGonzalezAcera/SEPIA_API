@@ -2,6 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   ggpubr[...],
+  openxlsx[...],
   .. / shinyapp / tools[...],
   .. / shinyapp / entities[fullExp,singleExp,geneLabels,imgLabels,displayNames]
 )
@@ -11,7 +12,7 @@ ui <- function(id) {
   ns <- NS(id)
   div(
     # Application title
-    headerPanel("Gene query"),
+    headerPanel("Model query"),
     
     # Application sidebar
     sidebarPanel(
@@ -38,7 +39,8 @@ ui <- function(id) {
       br(),
       textOutput(ns("resultTitle")),
       br(),
-      tableOutput(ns("FCtable"))
+      tableOutput(ns("FCtable")),
+      uiOutput(ns("downloadData_ui"))
     )
   )
 }
@@ -108,4 +110,20 @@ server <- function(input, output, session) {
     req(input$genename)
     preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
   })
+  
+  # render the button for download
+  output$downloadData_ui <- renderUI({
+    req(input$genename)
+    downloadButton(session$ns("downloadData"), 'Download')
+  })
+  
+  # Make downloadeable table in excel
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'FoldChange.xlsx'), collapse = "_")
+    },
+    content = function(file) {
+      write.xlsx(preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')], file)
+    }
+  )
 }

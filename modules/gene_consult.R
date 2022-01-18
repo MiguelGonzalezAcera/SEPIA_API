@@ -2,6 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   ggpubr[...],
+  openxlsx[...],
   .. / shinyapp / tools[...],
   .. / shinyapp / entities[fullExp,singleExp,geneLabels,imgLabels,displayNames]
 )
@@ -44,7 +45,8 @@ ui <- function(id) {
       br(),
       textOutput(ns("resultTitle")),
       br(),
-      tableOutput(ns("FCtable"))
+      tableOutput(ns("FCtable")),
+      uiOutput(ns("downloadData_ui"))
     )
   )
 }
@@ -62,6 +64,7 @@ server <- function(input, output, session) {
     server = TRUE
   )
   
+  # Update the selection for the projects
   updateSelectizeInput(
     session,
     "project",
@@ -79,7 +82,7 @@ server <- function(input, output, session) {
   # Render title of counts plot
   output$resultTitleCounts <- renderText({
     req(input$genename)
-    sprintf('Counts of the selected genes in %s model', names(displayNames)[match(input$project,displayNames)])
+    sprintf('Counts of %s in the selected models', input$genename)
   })
   
   # Make dimensions for the plot
@@ -114,4 +117,20 @@ server <- function(input, output, session) {
     req(input$genename)
     preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
   })
+  
+  # render the button for download
+  output$downloadData_ui <- renderUI({
+    req(input$genename)
+    downloadButton(session$ns("downloadData"), 'Download')
+  })
+  
+  # Make downloadeable table in excel
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'FoldChange.xlsx'), collapse = "_")
+    },
+    content = function(file) {
+      write.xlsx(preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')], file)
+    }
+  )
 }
