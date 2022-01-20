@@ -2,7 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[geneLabels,imgLabels,displayNames,modelDescriptions]
+  .. / shinyapp / entities[imgLabels,displayNames,modelDescriptions]
 )
 
 #' @export

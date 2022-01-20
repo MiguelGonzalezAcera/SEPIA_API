@@ -55,11 +55,6 @@ modelDescriptions <- list(
 )
 
 #' @export
-geneLabels <- list(
-  'mouse_genes' = unique(as.vector(read.csv("/DATA/mouse_genes.tsv", sep = '\t', header = FALSE)[['V3']]))
-)
-
-#' @export
 imgLabels <- list(
   'logo1' = "www/logo1.png"
 )

@@ -4,7 +4,7 @@ box::use(
   ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[fullExp,singleExp,geneLabels,imgLabels,displayNames]
+  .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames]
 )
 
 #' @export
@@ -53,7 +53,7 @@ server <- function(input, output, session) {
   updateSelectizeInput(
     session,
     "genename",
-    choices = geneLabels$mouse_genes,
+    choices = geneLabels()$mouse_genes,
     selected = c("S100a8","Vil1"),
     server = TRUE
   )

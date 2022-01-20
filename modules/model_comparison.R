@@ -2,7 +2,7 @@ box::use(
   shiny[...],
   ggplot2[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[geneLabels,imgLabels,displayNames]
+  .. / shinyapp / entities[imgLabels,displayNames]
 )
 
 #' @export
@@ -47,7 +47,7 @@ server <- function(input, output, session) {
   updateSelectizeInput(
     session,
     "genename",
-    choices = geneLabels$mouse_genes,
+    choices = geneLabels()$mouse_genes,
     selected = c(),
     server = TRUE
   )

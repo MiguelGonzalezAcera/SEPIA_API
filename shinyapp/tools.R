@@ -5,8 +5,33 @@ box::use(
   stats[...],
   ggplot2[...],
   ggpubr[...],
-  . / entities[fullExp,singleExp,geneLabels,displayNames],
+  . / entities[fullExp,singleExp,displayNames],
 )
+
+#'@export
+geneLabels <- function(){
+  # Establish the connection to the projects database
+  projectsRefDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Refs', host='localhost')
+  
+  # Create the query with the project name
+  queryRefText <- "select Genes from mouse_genes;"
+  
+  # Run the query against the database and fetch the resulting dataframe
+  rsRefInsert <- dbSendQuery(projectsRefDb, queryRefText)
+  dbRefCol <- dbFetch(rsRefInsert)
+  
+  # Clear the query
+  dbClearResult(rsRefInsert)
+  
+  # Disconnect the database
+  dbDisconnect(projectsRefDb)
+  
+  # return List of genes with a name
+  geneLabelsList <- list(
+    'mouse_genes' = unique(as.vector(dbRefCol[['Genes']]))
+  )
+  return(geneLabelsList)
+}
 
 #' @export
 projectPreproc <- function(project) {
