@@ -16,7 +16,7 @@ ui <- function(id) {
     sidebarPanel(
       selectInput(ns("project"), "Project:", displayNames),
       
-      submitButton("Update View"),
+      #submitButton("Update View"),
       
       width = 3
     ),

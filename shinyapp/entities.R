@@ -2,6 +2,15 @@ box::use(
   utils[...]
 )
 
+#Temporal table for usernames and passwords
+#' @export
+userBase <- data.frame(
+  user = c("Miguel", "Guest"),
+  password = c("Plater1a", "TRR241"),
+  permissions = c("admin", "standard"),
+  name = c("Myself", "Some other")
+)
+
 # Generate lists of options for the displays
 #' @export
 fullExp <- list(

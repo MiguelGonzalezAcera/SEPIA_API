@@ -32,7 +32,7 @@ ui <- function(id) {
         width = "100%"
       ),
       
-      submitButton("Update View"),
+      #submitButton("Update View"),
       
       width = 3
     ),
@@ -75,13 +75,13 @@ server <- function(input, output, session) {
   
   # Preprocess the data
   preprocResultInput <- reactive({
-    req(input$genename)
+    req(input$genename,input$project)
     preprocessing(input$project, input$genename)
   })
   
   # Render title of counts plot
   output$resultTitleCounts <- renderText({
-    req(input$genename)
+    req(input$genename,input$project)
     sprintf('Counts of %s in the selected models', input$genename)
   })
   
@@ -95,7 +95,7 @@ server <- function(input, output, session) {
   
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
-    req(input$genename)
+    req(input$genename,input$project)
     ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
       geom_boxplot()+
       facet_wrap(~Comparison, scales="free", ncol=3)
@@ -108,19 +108,19 @@ server <- function(input, output, session) {
   
   # Render the title
   output$resultTitle <- renderText({
-    req(input$genename)
+    req(input$genename,input$project)
     sprintf('Fold change of the selected genes in %s model', names(displayNames)[match(input$project,displayNames)])
   })
   
   # Render fold change table
   output$FCtable <- renderTable({
-    req(input$genename)
+    req(input$genename,input$project)
     preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
   })
   
   # render the button for download
   output$downloadData_ui <- renderUI({
-    req(input$genename)
+    req(input$genename,input$project)
     downloadButton(session$ns("downloadData"), 'Download')
   })
   

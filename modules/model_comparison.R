@@ -25,7 +25,7 @@ ui <- function(id) {
         width = "100%"
       ),
 
-      submitButton("Update View"),
+      #submitButton("Update View"),
       
       width = 3
     ),
