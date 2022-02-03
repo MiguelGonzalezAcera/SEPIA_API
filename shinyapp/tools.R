@@ -11,7 +11,7 @@ box::use(
 #'@export
 geneLabels <- function(){
   # Establish the connection to the projects database
-  projectsRefDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Refs', host='localhost')
+  projectsRefDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Refs', host='localhost')
   
   # Create the query with the project name
   queryRefText <- "select Genes from mouse_genes;"
@@ -36,7 +36,7 @@ geneLabels <- function(){
 #' @export
 projectPreproc <- function(project) {
   # Establish the connection to the projects database
-  projectsDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Projects', host='localhost')
+  projectsDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Projects', host='localhost')
   
   # Create the query with the project name
   queryProjText <- sprintf("select * from %s;", project)
@@ -58,7 +58,7 @@ projectPreproc <- function(project) {
 #' @export
 designPreproc <- function(project) {
   # Establish the connection to the projects database
-  designDb <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='Designs', host='localhost')
+  designDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Designs', host='localhost')
   
   # Create the query with the project name
   queryDesText <- sprintf("select * from %s;", project)
@@ -80,7 +80,7 @@ designPreproc <- function(project) {
 #' @export
 queryExperiment <- function(tabname, genename = c()) {
   # Establish the connection to the database
-  dbconnection <- dbConnect(RMariaDB::MariaDB(), user='root', password="Plater1a", dbname='RNAseq', host='localhost')
+  dbconnection <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='RNAseq', host='localhost')
   
   # create the query dor the rnaseq db 
   queryRNAText <- sprintf("select * from %s;", tabname)
