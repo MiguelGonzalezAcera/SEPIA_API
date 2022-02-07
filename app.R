@@ -10,7 +10,7 @@ box::use(
   . / shinyapp / entities[userBase]
 )
 
-addResourcePath('static', '/DATA/RNAseq_test/API_shiny/static/')
+addResourcePath('static', 'static/')
 
 router <- make_router(
   route("/", introduction$ui("introduction")),
