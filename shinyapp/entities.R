@@ -1,15 +1,34 @@
 box::use(
-  utils[...]
+  utils[...],
+  RMariaDB[...]
 )
+
+
+# Ask database for the usernames and passwords for the tool
+userQuery <- function(){
+  # Establish the connection to the projects database
+  usersDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Users', host='localhost')
+  
+  # Create the query with the project name
+  queryUserText <- "select * from SepiaUsers;"
+  
+  # Run the query against the database and fetch the resulting dataframe
+  rsUserInsert <- dbSendQuery(usersDb, queryUserText)
+  dbUserRows <- dbFetch(rsUserInsert)
+  
+  # Clear the query
+  dbClearResult(rsUserInsert)
+  
+  # Disconnect the database
+  dbDisconnect(usersDb)
+  
+  # return projects dataframe
+  return(dbUserRows)
+}
 
 #Temporal table for usernames and passwords
 #' @export
-userBase <- data.frame(
-  user = c("Miguel", "Guest"),
-  password = c("Plater1a", "TRR241"),
-  permissions = c("admin", "standard"),
-  name = c("Myself", "Some other")
-)
+userBase <- userQuery()
 
 # Generate lists of options for the displays
 #' @export

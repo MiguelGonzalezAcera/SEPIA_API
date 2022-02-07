@@ -79,6 +79,4 @@ server <- function(input, output, session) {
 
 app <- shinyApp(ui, server)
 
-ip = as.character(Sys.info()["nodename"])
-
-runApp(app, host = ip, port = 5003)
+runApp(app, port = 5003)
