@@ -77,6 +77,7 @@ server <- function(input, output, session) {
   })
 }
 
-app <- shinyApp(ui, server)
+#app <- shinyApp(ui, server)
+shinyApp(ui, server)
 
-runApp(app)
+#runApp(app)
