@@ -79,4 +79,4 @@ server <- function(input, output, session) {
 
 app <- shinyApp(ui, server)
 
-runApp(app, port = 5003)
+runApp(app)
