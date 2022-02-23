@@ -10,7 +10,7 @@ box::use(
   . / shinyapp / entities[userBase]
 )
 
-addResourcePath('static', 'static/')
+#addResourcePath('static', 'static/')
 
 router <- make_router(
   route("/", introduction$ui("introduction")),
@@ -20,7 +20,7 @@ router <- make_router(
 )
 
 ui <- fluidPage(
-  theme = "/static/main.css",
+  theme = "main.css",
   
   tags$ul(
     tags$li(a(href = route_link("/"), "Home")),
@@ -30,7 +30,7 @@ ui <- fluidPage(
   ),
   titlePanel(
     title = div(
-      img(src = "/static/logo1.png", height = 100),
+      img(src = "logo1.png", height = 100),
       br(),
       "SEpIa"
     )
