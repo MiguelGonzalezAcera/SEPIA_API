@@ -10,6 +10,7 @@ box::use(
 #' @export
 ui <- function(id) {
   ns <- NS(id)
+  
   div(
     # Application title
     headerPanel("Model query"),
@@ -33,14 +34,31 @@ ui <- function(id) {
     
     # Show the caption and plot of the requested variable against mpg
     mainPanel(
-      textOutput(ns("resultTitleCounts")),
+      conditionalPanel(
+        condition = "output.errorDispl == true",
+        tags$div(
+          class = 'errorFrame',
+          p('The following genes were not found in the selected experiments:'),
+          br(),
+          tableOutput(ns("errorTable"))
+        ),
+        ns = ns
+      ),
       br(),
-      uiOutput(ns("countsPlot_ui")),
-      br(),
-      textOutput(ns("resultTitle")),
-      br(),
-      tableOutput(ns("FCtable")),
-      uiOutput(ns("downloadData_ui"))
+      conditionalPanel(
+        condition = "output.plotDisplay == true",
+        div(
+          textOutput(ns("resultTitleCounts")),
+          br(),
+          uiOutput(ns("countsPlot_ui")),
+          br(),
+          textOutput(ns("resultTitle")),
+          br(),
+          tableOutput(ns("FCtable")),
+          uiOutput(ns("downloadData_ui"))
+        ),
+        ns = ns
+      )
     )
   )
 }
@@ -71,10 +89,11 @@ server <- function(input, output, session) {
   })
   
   # Make dimensions for the plot
+  # NOTE: I changed this from the length of the input to the length of the genes that come back, to avoid the wide ass graphs
   plot_dimensions <- reactive({
     list(
-      heigth = max(300, ifelse(length(input$genename) %% 3 == 0, 300*(trunc(length(input$genename)/3)), 300*(1+trunc(length(input$genename)/3)))),
-      width = ifelse(length(input$genename) <= 1, 300, ifelse(length(input$genename) <= 2, 600, 900))
+      heigth = max(300, ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) %% 3 == 0, 300*(trunc(length(unique(preprocResultInput()[['countsData']][['Genename']]))/3)), 300*(1+trunc(length(unique(preprocResultInput()[['countsData']][['Genename']]))/3)))),
+      width = ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) <= 1, 300, ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) <= 2, 600, 900))
     )
   })
   
@@ -110,6 +129,23 @@ server <- function(input, output, session) {
     req(input$genename,input$project)
     preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
   })
+  
+  # Check if it has to display the plots
+  output$plotDisplay <- reactive({
+    preprocResultInput()[['plotDispl']]
+  })
+  outputOptions(session$output, "plotDisplay", suspendWhenHidden = FALSE)
+  
+  # Render error table
+  output$errorTable <- renderTable({
+    preprocResultInput()[['errorData']]
+  })
+  
+  # Check if it has to display the error box
+  output$errorDispl <- reactive({
+    preprocResultInput()[['errDispl']]
+  })
+  outputOptions(session$output, "errorDispl", suspendWhenHidden = FALSE)
   
   # render the button for download
   output$downloadData_ui <- renderUI({

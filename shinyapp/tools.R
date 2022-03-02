@@ -109,11 +109,17 @@ preprocDCdataSingle <- function(project, genename) {
   # Ask the database for the table
   dbRNARowsFilt <- queryExperiment(project, genename)
   
-  # Add name of the project
-  dbRNARowsFilt['Comparison'] <- c(project)
-  
-  # Return processed dataframe
-  return(dbRNARowsFilt)
+  # Check if the dataframe is empty and return it directly if so
+  if (dim(dbRNARowsFilt)[1] == 0) {
+    # If it is empty, return it without changes. The error will be managed in the upper function.
+    return(dbRNARowsFilt)
+  } else {
+    # Add name of the project
+    dbRNARowsFilt['Comparison'] <- c(project)
+    
+    # Return processed dataframe
+    return(dbRNARowsFilt)
+  }
 }
 
 #' @export
@@ -127,7 +133,7 @@ preprocFCdata <- function(dbProjRows, genename) {
     dbRNARows <- queryExperiment(dbProjRows[['Comparison']][i], genename)
     
     # Filter the columns of the differential expression data
-    dbRNARowsFilt <- dbRNARows[c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes')]
+    dbRNARowsFilt <- dbRNARows[c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG')]
     
     # Add comparison name
     dbRNARowsFilt['Comparison'] <- c(paste(dbProjRows[['Sample']][i], dbProjRows[['Control']][i], sep=' v '))
@@ -186,38 +192,49 @@ preprocCountsData <- function(dbProjRows, dbDesRows, genename) {
 preprocCountsDataSingle <- function(project, dbDesRows, genename) {
   # Run the query database function
   dbRNARows <- queryExperiment(project, genename)
-  
-  # Transform into pure numeric dataframe
-  wdb <- dbRNARows[-which(names(dbRNARows) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes'))]
-  rownames(wdb) <- dbRNARows[['Genes']]
-  wdb <- as.data.frame(t(wdb))
-  wdb$Sample <- rownames(wdb)
-  
-  # Merge left the dataframe with the design table
-  mdb <- merge(x=wdb, y=dbDesRows, by='Sample', all.x=TRUE)
-  mdb <- mdb[c('Treatment', genename)]
-  
-  # Initialize final df
-  fdf <- data.frame()
-  # Loop through genes to give them the proper format
-  for (gene in genename) {
-    # Add genename column to df
-    wmdb <- mdb[c('Treatment', gene)]
-    wmdb['genename'] <- gene
-    colnames(wmdb) <- c('Treatment','Counts','Genename')
-    # Init if empty
-    if (dim(fdf)[2] == 0) {
-      fdf <- wmdb
-    } else {
-      fdf <- rbind(fdf, wmdb)
+
+  # Check if the dataframe is empty and return it directly if so
+  if (dim(dbRNARows)[1] == 0) {
+    # If it is empty, return it without changes. The error will be managed in the upper function.
+    return(dbRNARows)
+  } else {
+    # Transform into pure numeric dataframe
+    wdb <- dbRNARows[-which(names(dbRNARows) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
+    rownames(wdb) <- dbRNARows[['Genes']]
+    wdb <- as.data.frame(t(wdb))
+    wdb$Sample <- rownames(wdb)
+
+    # Merge left the dataframe with the design table
+    mdb <- merge(x=wdb, y=dbDesRows, by='Sample', all.x=TRUE)
+    
+    # Check if any of the genes is not in the column names and drop em
+    errored <- setdiff(genename, colnames(mdb))
+    genename <- genename[!genename %in% errored]
+    
+    mdb <- mdb[c('Treatment', genename)]
+    
+    # Initialize final df
+    fdf <- data.frame()
+    # Loop through genes to give them the proper format
+    for (gene in genename) {
+      # Add genename column to df
+      wmdb <- mdb[c('Treatment', gene)]
+      wmdb['genename'] <- gene
+      colnames(wmdb) <- c('Treatment','Counts','Genename')
+      # Init if empty
+      if (dim(fdf)[2] == 0) {
+        fdf <- wmdb
+      } else {
+        fdf <- rbind(fdf, wmdb)
+      }
     }
+    
+    # Add project column
+    fdf['Comparison'] = project
+    
+    # Return processed dataframe
+    return(fdf)
   }
-  
-  # Add project column
-  fdf['Comparison'] = project
-  
-  # Return processed dataframe
-  return(fdf)
 }
 
 #' @export
@@ -225,6 +242,7 @@ preprocessing <- function(project, genename) {
   # Init result dataframes
   clust_df <- NULL
   countsDf <- NULL
+  errored <- list()
   
   # Loop through the projects
   for (proj in project) {
@@ -250,8 +268,12 @@ preprocessing <- function(project, genename) {
       countsDf_tmp <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, genename)
     }
     
+    # Check empty dataframes and missing genes, store them in the error package
+    erroredItems <- genename[which(!genename %in% clust_df_tmp[['Genes']])]
+    errored[[proj]] <- erroredItems
+
     # Merge the fold change data
-    if (is.null(clust_df) == T){
+    if (is.null(clust_df) == T || dim(clust_df)[1] == 0){
       # If the final df is empty, fill it with one column
       clust_df <- clust_df_tmp
     } else {
@@ -269,11 +291,29 @@ preprocessing <- function(project, genename) {
       countsDf <- rbind(countsDf, countsDf_tmp)
     }
   }
+  # create boolean to hide the results if there is none
+  plotDispl <- dim(clust_df)[1] != 0
+  
+  # Transform errored into table for display
+  erroredDf <- data.frame()
+
+  if (length(unlist(errored, use.names = FALSE)) == 0) {
+    errDispl <- FALSE
+  } else {
+    erroredDf <- data.frame(
+      'Exp' = names(errored),
+      'Genes' = unlist(errored, use.names = FALSE)
+    )
+    errDispl <- TRUE
+  }
+  
   # Attach both dataframes on a named list for returning
   preprocResult = list(foldChangeData = clust_df,
-                       countsData = countsDf
+                       countsData = countsDf,
+                       errorData = erroredDf,
+                       plotDispl = plotDispl,
+                       errDispl = errDispl
                        )
-  
   # Return result
   return(preprocResult)
 }

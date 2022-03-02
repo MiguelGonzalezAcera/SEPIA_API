@@ -63,7 +63,6 @@ server <- function(input, output, session) {
     active = reactive(credentials()$user_auth)
   )
   
-  
   observeEvent(credentials()$user_auth, {
     # if user logs in successfully
     if (credentials()$user_auth) { 

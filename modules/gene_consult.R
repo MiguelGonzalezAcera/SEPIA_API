@@ -10,6 +10,9 @@ box::use(
 #' @export
 ui <- function(id) {
   ns <- NS(id)
+  
+  theme = "main.css"
+  
   div(
     # Application title
     headerPanel("Gene query"),
@@ -39,14 +42,31 @@ ui <- function(id) {
     
     # Show the caption and plot of the requested variable against mpg
     mainPanel(
-      textOutput(ns("resultTitleCounts")),
+      conditionalPanel(
+        condition = "output.errorDispl == true",
+        tags$div(
+          class = 'errorFrame',
+          p('The following genes were not found in the selected experiments:'),
+          br(),
+          tableOutput(ns("errorTable"))
+        ),
+        ns = ns
+      ),
       br(),
-      uiOutput(ns("countsPlot_ui")),
-      br(),
-      textOutput(ns("resultTitle")),
-      br(),
-      tableOutput(ns("FCtable")),
-      uiOutput(ns("downloadData_ui"))
+      conditionalPanel(
+        condition = "output.plotDisplay == true",
+        div(
+          textOutput(ns("resultTitleCounts")),
+          br(),
+          uiOutput(ns("countsPlot_ui")),
+          br(),
+          textOutput(ns("resultTitle")),
+          br(),
+          tableOutput(ns("FCtable")),
+          uiOutput(ns("downloadData_ui"))
+        ),
+        ns = ns
+      )
     )
   )
 }
@@ -88,8 +108,8 @@ server <- function(input, output, session) {
   # Make dimensions for the plot
   plot_dimensions <- reactive({
     list(
-      heigth = max(300, ifelse(length(input$project) %% 3 == 0, 300*(trunc(length(input$project)/3)), 300*(1+trunc(length(input$project)/3)))),
-      width = ifelse(length(input$project) <= 1, 300, ifelse(length(input$project) <= 2, 600, 900))
+      heigth = max(300, ifelse(length(unique(preprocResultInput()[['countsData']][['Comparison']])) %% 3 == 0, 300*(trunc(length(unique(preprocResultInput()[['countsData']][['Comparison']]))/3)), 300*(1+trunc(length(unique(preprocResultInput()[['countsData']][['Comparison']]))/3)))),
+      width = ifelse(length(unique(preprocResultInput()[['countsData']][['Comparison']])) <= 1, 300, ifelse(length(unique(preprocResultInput()[['countsData']][['Comparison']])) <= 2, 600, 900))
     )
   })
   
@@ -117,6 +137,23 @@ server <- function(input, output, session) {
     req(input$genename,input$project)
     preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
   })
+  
+  # Check if it has to display the plots
+  output$plotDisplay <- reactive({
+    preprocResultInput()[['plotDispl']]
+  })
+  outputOptions(session$output, "plotDisplay", suspendWhenHidden = FALSE)
+  
+  # Render error table
+  output$errorTable <- renderTable({
+    preprocResultInput()[['errorData']]
+  })
+  
+  # Check if it has to display the error box
+  output$errorDispl <- reactive({
+    preprocResultInput()[['errDispl']]
+  })
+  outputOptions(session$output, "errorDispl", suspendWhenHidden = FALSE)
   
   # render the button for download
   output$downloadData_ui <- renderUI({
