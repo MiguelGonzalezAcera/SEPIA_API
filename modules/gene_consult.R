@@ -106,6 +106,7 @@ server <- function(input, output, session) {
   })
   
   # Make dimensions for the plot
+  # NOTE: I changed this from the length of the input to the length of the genes that come back, to avoid the wide ass graphs
   plot_dimensions <- reactive({
     list(
       heigth = max(300, ifelse(length(unique(preprocResultInput()[['countsData']][['Comparison']])) %% 3 == 0, 300*(trunc(length(unique(preprocResultInput()[['countsData']][['Comparison']]))/3)), 300*(1+trunc(length(unique(preprocResultInput()[['countsData']][['Comparison']]))/3)))),

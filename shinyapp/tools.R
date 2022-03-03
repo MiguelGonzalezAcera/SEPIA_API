@@ -34,28 +34,6 @@ geneLabels <- function(){
 }
 
 #' @export
-projectPreproc <- function(project) {
-  # Establish the connection to the projects database
-  projectsDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Projects', host='localhost')
-  
-  # Create the query with the project name
-  queryProjText <- sprintf("select * from %s;", project)
-
-  # Run the query against the database and fetch the resulting dataframe
-  rsProjInsert <- dbSendQuery(projectsDb, queryProjText)
-  dbProjRows <- dbFetch(rsProjInsert)
-  
-  # Clear the query
-  dbClearResult(rsProjInsert)
-  
-  # Disconnect the database
-  dbDisconnect(projectsDb)
-  
-  # return projects dataframe
-  return(dbProjRows)
-}
-
-#' @export
 designPreproc <- function(project) {
   # Establish the connection to the projects database
   designDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Designs', host='localhost')
@@ -123,72 +101,6 @@ preprocDCdataSingle <- function(project, genename) {
 }
 
 #' @export
-preprocFCdata <- function(dbProjRows, genename) {
-  # Get a dataframe with the columns of the fold change of all the samples
-  clust_df <- NULL
-  
-  # Loop to get the sets of data we need for the display
-  for (i in c(1:nrow(dbProjRows))) {
-    # Run the query database function
-    dbRNARows <- queryExperiment(dbProjRows[['Comparison']][i], genename)
-    
-    # Filter the columns of the differential expression data
-    dbRNARowsFilt <- dbRNARows[c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG')]
-    
-    # Add comparison name
-    dbRNARowsFilt['Comparison'] <- c(paste(dbProjRows[['Sample']][i], dbProjRows[['Control']][i], sep=' v '))
-    
-    # Add data to clust_df
-    if (is.null(clust_df) == T){
-      # If the final df is empty, fill it with one column
-      clust_df <- dbRNARowsFilt
-    } else {
-      # If not, add the column to the df
-      clust_df <- rbind(clust_df, dbRNARowsFilt)
-    }
-  }
-  
-  # Return processed dataframe
-  return(clust_df)
-}
-
-#' @export
-preprocCountsData <- function(dbProjRows, dbDesRows, genename) {
-  # Get a dataframe with the columns of the fold change of all the samples
-  countsDf <- NULL
-  
-  # Loop to get the sets of data we need for the display
-  for (i in c(1:nrow(dbProjRows))) {
-    # Run the single id for each project
-    countsDfTmp <- preprocCountsDataSingle(dbProjRows[['Comparison']][i], dbDesRows, genename)
-    
-    # Merge the piece of data
-    if (is.null(countsDf) == T){
-      # If the final df is empty, fill it with one column
-      countsDf <- countsDfTmp
-    } else {
-      # If not, add the column to the df
-      countsDf <- rbind(countsDf, countsDfTmp)
-    }
-  }
-  
-  # Group by treatment and genename
-  countsDfGr <- countsDf %>% group_by(Treatment, Genename) %>% summarise(CountsMean = mean(Counts), CountsErrSup = mean(Counts) + sd(Counts), CountsErrInf = mean(Counts) - sd(Counts))
-  # Transform to dataframe
-  countsDfGr <- data.frame(countsDfGr)
-  # Merge with design in order to keep the order
-  countsDfGrMer <- merge(x=dbDesRows, y=countsDfGr, by='Treatment', all.y=TRUE)
-  # Order by the intended ID, keep the interesting columns, drop duplicated rows
-  countsDfFinal <- unique(countsDfGrMer[order(countsDfGrMer$ID), c('Treatment','Genename','CountsMean','CountsErrSup','CountsErrInf')])
-  # Turn treatment into a character vector and then back into a factor to keep order of treatments in the plot
-  countsDfFinal$Treatment <- as.character(countsDfFinal$Treatment)
-  countsDfFinal$Treatment <- factor(countsDfFinal$Treatment, levels=unique(countsDfFinal$Treatment))
-  
-  # Return processed dataframe
-  return(countsDfFinal)
-}
-
-#' @export
 preprocCountsDataSingle <- function(project, dbDesRows, genename) {
   # Run the query database function
   dbRNARows <- queryExperiment(project, genename)
@@ -246,31 +158,19 @@ preprocessing <- function(project, genename) {
   
   # Loop through the projects
   for (proj in project) {
-    # Choose between single experiment and complete sequentiations
-    if (proj %in% names(fullExp)){
-      # Get data from the project
-      dbProjRows <- projectPreproc(fullExp[[proj]])
-      
-      # Get data from the project design
-      dbDesRows <- designPreproc(fullExp[[proj]])
-      
-      # Get the fold change data
-      clust_df_tmp <- preprocFCdata(dbProjRows, genename)
-      # Get the fold change data
-      countsDf_tmp <- preprocCountsData(dbProjRows, dbDesRows, genename)
-    } else if (proj %in% names(singleExp)) {
-      # Get data from the project design
-      dbDesRows <- designPreproc(singleExp[[proj]][['project']])
-      
-      # Get the table of asking
-      clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
-      # Get the fold change data
-      countsDf_tmp <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, genename)
-    }
+    # Get data from the project design
+    dbDesRows <- designPreproc(singleExp[[proj]][['project']])
+    
+    # Get the table of asking
+    clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
+    # Get the fold change data
+    countsDf_tmp <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, genename)
     
     # Check empty dataframes and missing genes, store them in the error package
     erroredItems <- genename[which(!genename %in% clust_df_tmp[['Genes']])]
-    errored[[proj]] <- erroredItems
+    # Display the readable name, and not the code
+    projectName <- names(displayNames)[displayNames == proj]
+    errored[[projectName]] <- erroredItems
 
     # Merge the fold change data
     if (is.null(clust_df) == T || dim(clust_df)[1] == 0){

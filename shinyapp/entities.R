@@ -85,10 +85,8 @@ displayNames <- list("Acute DSS" = "AcDSS",
                      "Wound Healing time course - h24" = "WH24",
                      "Wound Healing time course - h48" = "WH48",
                      "Eimeria vermiformis infection" = "EvInf",
-                     "Helicobacter colitis infection" = "HhInf",
-                     "DSS time course" = "DSSTC",
-                     "AOM DSS" = "AOMDSS",
-                     "Wound Healing" = "WH")
+                     "Helicobacter colitis infection" = "HhInf"
+                     )
 
 #' @export
 modelDescriptions <- list(

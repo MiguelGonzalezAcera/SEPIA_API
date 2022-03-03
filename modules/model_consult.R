@@ -100,17 +100,9 @@ server <- function(input, output, session) {
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
     req(input$genename,input$project)
-    if (input$project %in% names(fullExp)) {
-      ggplot(preprocResultInput()[['countsData']]) +
-        geom_line(aes(x=Treatment, y=CountsMean, group=1), color="red") +
-        geom_point(aes(x=Treatment, y=CountsMean)) +
-        facet_wrap(~Genename, scales="free_y", ncol=3) +
-        geom_errorbar(aes(x=Treatment, ymin=CountsErrInf, ymax=CountsErrSup), width=0.4, colour="orange")
-    } else if (input$project %in% names(singleExp)) {
-      ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
-        geom_boxplot()+
-        facet_wrap(~Genename, scales="free_y", ncol=3)
-    }
+    ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
+      geom_boxplot()+
+      facet_wrap(~Genename, scales="free_y", ncol=3)
   })
   
   # Wrap in ui for dynamism
