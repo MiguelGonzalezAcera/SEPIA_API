@@ -25,8 +25,16 @@ ul li a:hover {
 }
 
 .errorFrame {
-  background-color:rgba(255, 0, 0, 0.3);
-  font-size: 15px;
+  background-color:rgba(255, 0, 0, 0.2);
+  font-size: 12px;
   border-style: solid;
   border-color: #ff0000;
+}
+
+.errorText {
+  margin-left: 30px;
+}
+
+.SmallTitleText {
+  font-size: 20px;
 }

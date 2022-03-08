@@ -46,9 +46,13 @@ ui <- function(id) {
         condition = "output.errorDispl == true",
         tags$div(
           class = 'errorFrame',
-          p('The following genes were not found in the selected experiments:'),
           br(),
-          tableOutput(ns("errorTable"))
+          div(
+            class = 'errorText',
+            p('The following genes were not found in the selected experiments:'),
+            br(),
+            tableOutput(ns("errorTable"))
+          )
         ),
         ns = ns
       ),
@@ -56,11 +60,18 @@ ui <- function(id) {
       conditionalPanel(
         condition = "output.plotDisplay == true",
         div(
-          textOutput(ns("resultTitleCounts")),
+          div(
+            class = 'SmallTitleText',
+            textOutput(ns("resultTitleCounts"))
+          ),
           br(),
           uiOutput(ns("countsPlot_ui")),
           br(),
-          textOutput(ns("resultTitle")),
+          br(),
+          div(
+            class = 'SmallTitleText',
+            textOutput(ns("resultTitle"))
+          ),
           br(),
           tableOutput(ns("FCtable")),
           uiOutput(ns("downloadData_ui"))
