@@ -24,7 +24,7 @@ ui <- function(id) {
     mainPanel(
       textOutput(ns("introdTitle")),
       br(),
-      textOutput(ns("introdDesc")),
+      htmlOutput(ns("introdDesc")),
     )
   )
 }
@@ -37,7 +37,7 @@ server <- function(input, output, session) {
   })
   
   # Description
-  output$introdDesc <- renderText({
-    modelDescriptions[[input$project]]
+  output$introdDesc <- renderUI({
+    HTML(modelDescriptions[[input$project]])
   })
 }
