@@ -130,7 +130,7 @@ server <- function(input, output, session) {
   # Render the title
   output$resultTitle <- renderText({
     req(input$genename,input$project)
-    sprintf('Fold change of the selected genes in %s model', names(displayNames)[match(input$project,displayNames)])
+    sprintf('Fold change of %s in the selected models', input$genename)
   })
   
   # Render fold change table
