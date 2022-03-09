@@ -66,7 +66,7 @@ ui <- function(id) {
           ),
           br(),
           tableOutput(ns("FCtable")),
-          uiOutput(ns("downloadData_ui"))
+          downloadButton(ns("downloadData_ui"), 'Download table', class = 'DLButton')
         ),
         ns = ns
       )

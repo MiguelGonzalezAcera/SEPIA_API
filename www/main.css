@@ -11,7 +11,7 @@ ul li a {
   font-size: 1.6rem;
   padding: 1.5rem 1.6rem;
   text-decoration: none;
-  transition: all, 0.1s;
+  transition: all, 0.4s;
 }
 
 a:link, a:visited, a:hover, a:active {
@@ -50,4 +50,15 @@ ul li a:hover {
 
 .SmallTitleText {
   font-size: 20px;
+}
+
+.DLButton {
+  background-color: #f88e06;
+  color: white;
+  transition-duration: 0.4s;
+}
+
+.DLButton:hover {
+  background-color: #da9016;
+  color: white;
 }
