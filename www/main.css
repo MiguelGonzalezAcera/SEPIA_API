@@ -29,9 +29,22 @@ ul li a:hover {
   font-size: 12px;
   border-style: solid;
   border-color: #ff0000;
+  width:600px;
 }
 
 .errorText {
+  margin-left: 30px;
+}
+
+.comparisonPlotNoteFrame {
+  background-color:rgba(255, 247, 0, 0.2);
+  font-size: 12px;
+  border-style: solid;
+  border-color: #fff700;
+  width:750px;
+}
+
+.comparisonPlotNote {
   margin-left: 30px;
 }
 

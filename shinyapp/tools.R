@@ -258,7 +258,8 @@ preprocComparisons <- function(projectA, projectB, genename) {
       geom_point(colour='grey') + geom_smooth(method=lm, formula = y ~ x) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) + 
-      geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red')
+      geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red') +
+      geom_text(data=dbRNARowsGlist, aes(label=Genes),hjust=0, vjust=0)
   }
   
   # Attach all results to a named list for returning
