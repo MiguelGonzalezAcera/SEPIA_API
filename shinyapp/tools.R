@@ -257,6 +257,7 @@ preprocessing <- function(project, genename) {
     )
     errDispl <- TRUE
   }
+
   # Attach both dataframes on a named list for returning
   preprocResult = list(foldChangeData = clust_df,
                        countsData = countsBox,

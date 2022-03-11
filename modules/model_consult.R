@@ -1,7 +1,6 @@
 box::use(
   shiny[...],
   ggplot2[...],
-  gridExtra[...],
   ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
@@ -118,8 +117,8 @@ server <- function(input, output, session) {
   output$countsPlot <- renderPlot({
     req(input$genename,input$project)
     # 'You could do it with facet_wrap' If you can tell me how to make the control of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
-    grid.arrange(
-      grobs = preprocResultInput()[['countsData']], 
+    ggarrange(
+      plotlist = preprocResultInput()[['countsData']], 
       ncol = ifelse(
         length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) > 2,
         3,
@@ -179,8 +178,8 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       # plot the thing
-      pMC <- grid.arrange(
-        grobs = preprocResultInput()[['countsData']], 
+      pMC <- ggarrange(
+        plotlist = preprocResultInput()[['countsData']], 
         ncol = ifelse(
           length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) > 2,
           3,
