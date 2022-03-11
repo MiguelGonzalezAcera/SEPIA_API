@@ -56,6 +56,28 @@ designPreproc <- function(project) {
 }
 
 #' @export
+projectPreproc <- function(project) {
+  # Establish the connection to the projects database
+  projectDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Projects', host='localhost')
+  
+  # Create the query with the project name
+  queryProjText <- sprintf("select * from %s;", project)
+  
+  # Run the query against the database and fetch the resulting dataframe
+  rsProjInsert <- dbSendQuery(projectDb, queryProjText)
+  dbProjRows <- dbFetch(rsProjInsert)
+  
+  # Clear the query
+  dbClearResult(rsProjInsert)
+  
+  # Disconnect the database
+  dbDisconnect(projectDb)
+  
+  # return projects dataframe
+  return(dbProjRows)
+}
+
+#' @export
 queryExperiment <- function(tabname, genename = c()) {
   # Establish the connection to the database
   dbconnection <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='RNAseq', host='localhost')
@@ -101,9 +123,14 @@ preprocDCdataSingle <- function(project, genename) {
 }
 
 #' @export
-preprocCountsDataSingle <- function(project, dbDesRows, genename) {
+preprocCountsDataSingle <- function(project, dbDesRows, dbProjRows, genename) {
   # Run the query database function
   dbRNARows <- queryExperiment(project, genename)
+  
+  # Select the row with our project
+  dbProjRows <- dbProjRows[dbProjRows$Comparison == project,]
+  # Create reference for the order of the control and sample rows
+  orderCtrl <- c(dbProjRows[['Control']], dbProjRows[['Sample']])
 
   # Check if the dataframe is empty and return it directly if so
   if (dim(dbRNARows)[1] == 0) {
@@ -133,6 +160,15 @@ preprocCountsDataSingle <- function(project, dbDesRows, genename) {
       wmdb <- mdb[c('Treatment', gene)]
       wmdb['genename'] <- gene
       colnames(wmdb) <- c('Treatment','Counts','Genename')
+
+      # Sort the dataframe according to the control sample dynamic
+      if (wmdb$Treatment[1] != orderCtrl[1]) {
+        wmdb <- wmdb[rev(order(wmdb$Treatment)),]
+        wmdb$Treatment <- as.factor(wmdb$Treatment)
+        wmdb$Treatment <- with(wmdb, relevel(Treatment, orderCtrl[1]))
+      }
+      rownames(wmdb) <- NULL
+
       # Init if empty
       if (dim(fdf)[2] == 0) {
         fdf <- wmdb
@@ -153,7 +189,7 @@ preprocCountsDataSingle <- function(project, dbDesRows, genename) {
 preprocessing <- function(project, genename) {
   # Init result dataframes
   clust_df <- NULL
-  countsDf <- NULL
+  countsBox <- list()
   errored <- list()
   
   # Loop through the projects
@@ -161,16 +197,19 @@ preprocessing <- function(project, genename) {
     # Get data from the project design
     dbDesRows <- designPreproc(singleExp[[proj]][['project']])
     
-    # Get the table of asking
-    clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
+    # Get data from the project design
+    dbProjRows <- projectPreproc(singleExp[[proj]][['project']])
+    
     # Get the fold change data
-    countsDf_tmp <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, genename)
+    clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
     
     # Check empty dataframes and missing genes, store them in the error package
     erroredItems <- genename[which(!genename %in% clust_df_tmp[['Genes']])]
     # Display the readable name, and not the code
     projectName <- names(displayNames)[displayNames == proj]
     errored[[projectName]] <- erroredItems
+    # Add display name also to the dataframes
+    clust_df_tmp['ModelName'] <- projectName
 
     # Merge the fold change data
     if (is.null(clust_df) == T || dim(clust_df)[1] == 0){
@@ -178,17 +217,29 @@ preprocessing <- function(project, genename) {
       clust_df <- clust_df_tmp
     } else {
       # If not, add the column to the df. Select columns if this is the case
-      clust_df <- clust_df[c('id','Comparison','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
-      clust_df_tmp <- clust_df_tmp[c('id','Comparison','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+      clust_df <- clust_df[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+      clust_df_tmp <- clust_df_tmp[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
       clust_df <- rbind(clust_df, clust_df_tmp)
     }
     
-    if (is.null(countsDf) == T){
-      # If the final df is empty, fill it with one column
-      countsDf <- countsDf_tmp
-    } else {
-      # If not, add the column to the df
-      countsDf <- rbind(countsDf, countsDf_tmp)
+    # Loop throught the genes
+    for (gene in genename) {
+      # Get the counts data
+      countsDf <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, dbProjRows, gene)
+      
+      # Check if it is empty
+      if (dim(countsDf)[1] != 0) {
+        # Select only the interesting columns
+        contsDf2 <- countsDf[c('Treatment','Counts')]
+        
+        # Create the boxplot with the extracted data
+        geneBplot <- ggplot(contsDf2, aes(x=Treatment, y=Counts)) + 
+          geom_boxplot() +
+          ggtitle(paste(gene, projectName, sep = ' - '))
+        
+        # Add plot to list
+        countsBox[[paste(gene, projectName, sep = '_')]] <- geneBplot
+      }
     }
   }
   # create boolean to hide the results if there is none
@@ -206,10 +257,9 @@ preprocessing <- function(project, genename) {
     )
     errDispl <- TRUE
   }
-  
   # Attach both dataframes on a named list for returning
   preprocResult = list(foldChangeData = clust_df,
-                       countsData = countsDf,
+                       countsData = countsBox,
                        errorData = erroredDf,
                        plotDispl = plotDispl,
                        errDispl = errDispl
@@ -268,3 +318,4 @@ preprocComparisons <- function(projectA, projectB, genename) {
   # Return result
   return(preprocResult)
 }
+

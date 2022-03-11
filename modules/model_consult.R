@@ -1,6 +1,7 @@
 box::use(
   shiny[...],
   ggplot2[...],
+  gridExtra[...],
   ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
@@ -66,7 +67,8 @@ ui <- function(id) {
           ),
           br(),
           tableOutput(ns("FCtable")),
-          downloadButton(ns("downloadData_ui"), 'Download table', class = 'DLButton')
+          downloadButton(ns("downloadData"), 'Download Table', class = 'DLButton'),
+          downloadButton(ns("downloadPlot"), 'Download Graphic', class = 'DLButton')
         ),
         ns = ns
       )
@@ -103,22 +105,25 @@ server <- function(input, output, session) {
   # NOTE: I changed this from the length of the input to the length of the genes that come back, to avoid the wide ass graphs
   plot_dimensions <- reactive({
     list(
-      heigth = max(300, ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) %% 3 == 0, 300*(trunc(length(unique(preprocResultInput()[['countsData']][['Genename']]))/3)), 300*(1+trunc(length(unique(preprocResultInput()[['countsData']][['Genename']]))/3)))),
-      width = ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) <= 1, 300, ifelse(length(unique(preprocResultInput()[['countsData']][['Genename']])) <= 2, 600, 900))
+      height = max(300, ifelse(
+        length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) %% 3 == 0,
+        300*(trunc(length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))/3)),
+        300*(1+trunc(length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))/3)))
+      ),
+      width = ifelse(length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) <= 1, 300, ifelse(length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) <= 2, 600, 900))
     )
   })
   
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
     req(input$genename,input$project)
-    ggplot(preprocResultInput()[['countsData']], aes(x=Treatment, y=Counts))+
-      geom_boxplot()+
-      facet_wrap(~Genename, scales="free_y", ncol=3)
+    # 'You could do it with facet_wrap' If you can tell me how to make the control of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
+    grid.arrange(grobs = preprocResultInput()[['countsData']], ncol = 3)
   })
   
   # Wrap in ui for dynamism
   output$countsPlot_ui <- renderUI({
-    plotOutput(session$ns("countsPlot"), height = plot_dimensions()$heigth, width = plot_dimensions()$width)
+    plotOutput(session$ns("countsPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
   })
   
   # Render the title
@@ -130,7 +135,7 @@ server <- function(input, output, session) {
   # Render fold change table
   output$FCtable <- renderTable({
     req(input$genename,input$project)
-    preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')]
+    preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')]
   })
   
   # Check if it has to display the plots
@@ -150,19 +155,26 @@ server <- function(input, output, session) {
   })
   outputOptions(session$output, "errorDispl", suspendWhenHidden = FALSE)
   
-  # render the button for download
-  output$downloadData_ui <- renderUI({
-    req(input$genename,input$project)
-    downloadButton(session$ns("downloadData"), 'Download')
-  })
-  
   # Make downloadeable table in excel
   output$downloadData <- downloadHandler(
     filename = function() {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'FoldChange.xlsx'), collapse = "_")
     },
     content = function(file) {
-      write.xlsx(preprocResultInput()[['foldChangeData']][c('Comparison','Genes','log2FoldChange','pvalue','padj')], file)
+      write.xlsx(preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')], file)
+    }
+  )
+  
+  # Make dowload button for the plot as jpeg in proper resolution
+  output$downloadPlot <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot.jpeg'), collapse = "_")
+    },
+    content = function(file) {
+      # plot the thing
+      pMC <- grid.arrange(grobs = preprocResultInput()[['countsData']], ncol = 3)
+      
+      ggsave(file, plot = pMC, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
     }
   )
 }
