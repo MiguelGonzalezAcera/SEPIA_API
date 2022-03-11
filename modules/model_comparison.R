@@ -44,8 +44,11 @@ ui <- function(id) {
         div(
           class = 'comparisonPlotNoteFrame',
           div(
-            class = 'comparisonPlotNote',
-            htmlOutput(ns('genelistNote'))
+            class = 'NoteFrame',
+            div(
+              class = 'NoteContent',
+              htmlOutput(ns('genelistNote'))
+            )
           )
         ),
         ns = ns

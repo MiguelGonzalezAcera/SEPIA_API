@@ -37,15 +37,23 @@ ul li a:hover {
 }
 
 .comparisonPlotNoteFrame {
-  background-color:rgba(255, 247, 0, 0.2);
-  font-size: 12px;
-  border-style: solid;
-  border-color: #fff700;
   width:750px;
 }
 
-.comparisonPlotNote {
+.fcTableNoteFrame {
+  width:600px;
+}
+
+.NoteFrame {
+  background-color:rgba(255, 247, 0, 0.2);
+  font-size: 13px;
+  border-style: solid;
+  border-color: #fff700;
+}
+
+.NoteContent {
   margin-left: 30px;
+  margin-right: 15px;
 }
 
 .SmallTitleText {
