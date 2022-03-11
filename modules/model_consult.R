@@ -118,7 +118,14 @@ server <- function(input, output, session) {
   output$countsPlot <- renderPlot({
     req(input$genename,input$project)
     # 'You could do it with facet_wrap' If you can tell me how to make the control of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
-    grid.arrange(grobs = preprocResultInput()[['countsData']], ncol = 3)
+    grid.arrange(
+      grobs = preprocResultInput()[['countsData']], 
+      ncol = ifelse(
+        length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) > 2,
+        3,
+        length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))
+      )
+    )
   })
   
   # Wrap in ui for dynamism
@@ -172,7 +179,14 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       # plot the thing
-      pMC <- grid.arrange(grobs = preprocResultInput()[['countsData']], ncol = 3)
+      pMC <- grid.arrange(
+        grobs = preprocResultInput()[['countsData']], 
+        ncol = ifelse(
+          length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) > 2,
+          3,
+          length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))
+        )
+      )
       
       ggsave(file, plot = pMC, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
     }
