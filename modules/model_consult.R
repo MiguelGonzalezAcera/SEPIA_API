@@ -136,7 +136,7 @@ server <- function(input, output, session) {
         3,
         length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))
       ),
-      nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))/3)
+      nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))/3)
     )
   })
   
