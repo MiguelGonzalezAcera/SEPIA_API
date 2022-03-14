@@ -150,7 +150,8 @@ server <- function(input, output, session) {
         length(unique(preprocResultInput()[['foldChangeData']][['ModelName']])) > 2,
         3,
         length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))
-      )
+      ),
+      nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))/3)
     )
   })
   
