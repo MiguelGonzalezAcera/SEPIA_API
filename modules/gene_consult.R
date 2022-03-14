@@ -218,7 +218,8 @@ server <- function(input, output, session) {
           length(unique(preprocResultInput()[['foldChangeData']][['ModelName']])) > 2,
           3,
           length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))
-        )
+        ),
+        nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))/3)
       )
       ggsave(file, plot = pGC, device = 'jpeg', height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
     }

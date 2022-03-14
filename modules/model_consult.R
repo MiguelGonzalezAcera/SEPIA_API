@@ -203,7 +203,8 @@ server <- function(input, output, session) {
           length(unique(preprocResultInput()[['foldChangeData']][['Genes']])) > 2,
           3,
           length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))
-        )
+        ),
+        nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['Genes']]))/3)
       )
       
       ggsave(file, plot = pMC, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
