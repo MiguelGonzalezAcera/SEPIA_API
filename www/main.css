@@ -1,7 +1,30 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0 0 100px;
+    /* bottom = footer height */
+    padding: 25px;
+}
+
 ul {
   background-color: #f88e06;
     display: flex;
   justify-content: flex-end;
+  list-style-type: none;
+}
+
+.footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 100px;
+  width: 100%;
+  background-color: #f88e06;
+    display: flex;
+  justify-content: flex-start;
   list-style-type: none;
 }
 

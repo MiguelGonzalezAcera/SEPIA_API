@@ -42,7 +42,13 @@ ui <- fluidPage(
   loginUI(id = "login"),
   
   # Establish content
-  router$ui
+  router$ui,
+  
+  # Last break and bottom banner
+  div(
+    class = 'footer',
+    br()
+  )
 )
 
 server <- function(input, output, session) {
