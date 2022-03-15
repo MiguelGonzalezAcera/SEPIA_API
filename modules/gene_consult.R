@@ -35,7 +35,18 @@ ui <- function(id) {
         width = "100%"
       ),
       
-      #submitButton("Update View"),
+      # Add short description of the tool
+      br(),
+      div(
+        div(
+          class = 'SmallTitleText',
+          'Tool description:'
+        ),
+        div(
+          class = 'ToolDesc',
+          'Explore the behaviour of a gene across multiple mouse IBD models.'
+        )
+      ),
       
       width = 3
     ),

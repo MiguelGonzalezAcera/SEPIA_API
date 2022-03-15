@@ -4,7 +4,7 @@ html {
 }
 
 body {
-    margin: 0 0 100px;
+    margin: 0 0 30px;
     /* bottom = footer height */
     padding: 25px;
 }
@@ -20,7 +20,7 @@ ul {
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 100px;
+  height: 30px;
   width: 100%;
   background-color: #f88e06;
     display: flex;
