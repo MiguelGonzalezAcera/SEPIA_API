@@ -5,6 +5,7 @@ box::use(
   stats[...],
   ggplot2[...],
   ggpubr[...],
+  stringr[...],
   . / entities[fullExp,singleExp,displayNames],
 )
 
@@ -270,10 +271,38 @@ preprocessing <- function(project, genename) {
 }
 
 #' @export
+formatExcelDL <- function(dbRNA, projectA, projectB) {
+  # Get a subtable for each quadrant
+  dbRNAPP <- dbRNA[dbRNA$log2FoldChange.x >= 0 & dbRNA$log2FoldChange.y >= 0,]
+  dbRNAPN <- dbRNA[dbRNA$log2FoldChange.x >= 0 & dbRNA$log2FoldChange.y <= 0,]
+  dbRNANP <- dbRNA[dbRNA$log2FoldChange.x <= 0 & dbRNA$log2FoldChange.y >= 0,]
+  dbRNANN <- dbRNA[dbRNA$log2FoldChange.x <= 0 & dbRNA$log2FoldChange.y <= 0,]
+  
+  # Rename the columns with each experiment
+  newNames <- str_replace(colnames(dbRNA), '.x', sprintf('_%s',projectA))
+  newNames <- str_replace(newNames, '.y', sprintf('_%s',projectB))
+  
+  colnames(dbRNAPP) <- newNames
+  colnames(dbRNAPN) <- newNames
+  colnames(dbRNANP) <- newNames
+  colnames(dbRNANN) <- newNames
+  
+  # Arrange the things in a list and return
+  quadrantsRNA <- list()
+  quadrantsRNA[[sprintf('%s + v %s +', projectA, projectB)]] = dbRNAPP
+  quadrantsRNA[[sprintf('%s + v %s -', projectA, projectB)]] = dbRNAPN
+  quadrantsRNA[[sprintf('%s - v %s +', projectA, projectB)]] = dbRNANP
+  quadrantsRNA[[sprintf('%s - v %s -', projectA, projectB)]] = dbRNANN
+  
+  # Return the ting
+  return(quadrantsRNA)
+}
+
+#' @export
 preprocComparisons <- function(projectA, projectB, genename) {
   # Ask the database for the table for experiment A
   dbRNARowsA <- queryExperiment(singleExp[[projectA]][['tabid']])
-  dbRNARowsFiltA <- dbRNARowsA[c('id','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+  dbRNARowsFiltA <- dbRNARowsA[c('EnsGenes','log2FoldChange','pvalue','padj','Genes')]
   
   # Filter by p value threshold
   dbRNARowsFiltA <- dbRNARowsFiltA[dbRNARowsFiltA$padj < 0.05,]
@@ -283,7 +312,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
   
   # Repeat for project B
   dbRNARowsB <- queryExperiment(singleExp[[projectB]][['tabid']])
-  dbRNARowsFiltB <- dbRNARowsB[c('id','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+  dbRNARowsFiltB <- dbRNARowsB[c('EnsGenes','log2FoldChange','pvalue','padj','Genes')]
   dbRNARowsFiltB <- dbRNARowsFiltB[dbRNARowsFiltB$padj < 0.05,]
   dbRNARowsFiltB['Comparison'] <- c(projectB)
   
@@ -298,13 +327,22 @@ preprocComparisons <- function(projectA, projectB, genename) {
     ylab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectB,displayNames)]))
   
   # Display all of the genes or only the listed ones
-  if (length(genename) == 0) {
+  if (length(genename) == 0 | length(subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)) == 0) {
+    # format the table for download
+    dbRNARowsDL <- formatExcelDL(dbRNARowsMerg, projectA, projectB)
+    
+    # Complete the plot
     plot2 <- plot2 + geom_point(colour='black') + geom_smooth(method=lm, formula = y ~ x) + 
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..))
   } else {
     # Select only the rows with the genes
     dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
+    
+    # format the table for download
+    dbRNARowsDL <- formatExcelDL(dbRNARowsGlist, projectA, projectB)
+    
+    # Complete the plot
     plot2 <- plot2 + 
       geom_point(colour='grey') + geom_smooth(method=lm, formula = y ~ x) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
@@ -312,9 +350,10 @@ preprocComparisons <- function(projectA, projectB, genename) {
       geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red') +
       geom_text(data=dbRNARowsGlist, aes(label=Genes),hjust=0, vjust=0)
   }
-  
+
   # Attach all results to a named list for returning
-  preprocResult = list(plotData = plot2)
+  preprocResult = list(plotData = plot2,
+                       commonData = dbRNARowsDL)
   
   # Return result
   return(preprocResult)

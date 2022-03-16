@@ -1,6 +1,7 @@
 box::use(
   shiny[...],
   ggplot2[...],
+  openxlsx[...],
   .. / shinyapp / tools[...],
   .. / shinyapp / entities[imgLabels,displayNames]
 )
@@ -52,7 +53,9 @@ ui <- function(id) {
           )
         ),
         ns = ns
-      )
+      ),
+      br(),
+      downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton')
     )
   )
 }
@@ -112,4 +115,27 @@ server <- function(input, output, session) {
     length(input$genename) > 0
   })
   outputOptions(session$output, "noteDisplay", suspendWhenHidden = FALSE)
+  
+  # Make downloadeable table in excel
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GenesByQuadrant.xlsx'), collapse = "_")
+    },
+    content = function(file) {
+      # Create workbook
+      wb <- createWorkbook()
+      
+      # Iter through the tables
+      for (name in names(preprocComparisonsInput()[['commonData']])) {
+        # Add the sheet
+        sheetDB <- addWorksheet(wb, sheetName = name)
+        
+        # add the data
+        writeData(wb, sheetDB, preprocComparisonsInput()[['commonData']][[name]])
+      }
+      
+      # Save the notebook
+      saveWorkbook(wb, file = file)
+    }
+  )
 }
