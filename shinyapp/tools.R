@@ -315,7 +315,13 @@ vennComparison <- function(dbA, dbB, pNames) {
   vUpreg[[pNames[2]]] <- dbBUfilt[['Genes']]
   
   # Upreg plot
-  upVenn <- ggVennDiagram(vUpreg)
+  upVenn <- ggVennDiagram(
+    vUpreg,
+    edge_size = 0.1,
+    edge_color = 'black'
+  ) +
+    ggtitle('Upregulated genes') +
+    scale_fill_gradient(limits = c(0,NA),low="white",high = "red")
 
   # downreg
   dbADfilt <- dbA[dbA$log2FoldChange <= 0,]
@@ -326,8 +332,14 @@ vennComparison <- function(dbA, dbB, pNames) {
   vDownreg[[pNames[1]]] <- dbADfilt[['Genes']]
   vDownreg[[pNames[2]]] <- dbBDfilt[['Genes']]
   
-  # Upreg plot
-  downVenn <- ggVennDiagram(vDownreg)
+  # downreg plot
+  downVenn <- ggVennDiagram(
+    vDownreg,
+    edge_size = 0.1,
+    edge_color = 'black'
+  ) +
+    ggtitle('Downregulated genes') +
+    scale_fill_gradient(limits = c(0,NA),low="white",high = "red")
   
   #Make the list
   resultVenn <- ggarrange(upVenn, downVenn, ncol = 2)
@@ -398,7 +410,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
 
   # Attach all results to a named list for returning
   preprocResult = list(plotData = plot2,
-                       vennData <- vennDiags,
+                       vennData = vennDiags,
                        commonData = dbRNARowsDL)
 
   # Return result

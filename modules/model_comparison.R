@@ -122,13 +122,13 @@ server <- function(input, output, session) {
   
   # Create and render venn diagram plot set
   output$vennPlot <- renderPlot({
-    req(input$genename,input$project)
+    req(input$projectB)
     preprocComparisonsInput()[['vennData']]
   })
 
   # Wrap plot in ui for dynamism
   output$vennPlot_ui <- renderUI({
-    plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
+    plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height/3, width = plot_dimensions()$width)
   })
   
   # Render informative note about the gene selection
