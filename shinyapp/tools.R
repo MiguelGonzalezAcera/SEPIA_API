@@ -6,6 +6,7 @@ box::use(
   ggplot2[...],
   ggpubr[...],
   stringr[...],
+  ggVennDiagram[...],
   . / entities[fullExp,singleExp,displayNames],
 )
 
@@ -299,6 +300,42 @@ formatExcelDL <- function(dbRNA, projectA, projectB) {
 }
 
 #' @export
+vennComparison <- function(dbA, dbB, pNames) {
+  # Remove log
+  futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+  
+  #Select by up/down and make two venns
+  # upreg
+  dbAUfilt <- dbA[dbA$log2FoldChange >= 0,]
+  dbBUfilt <- dbB[dbB$log2FoldChange >= 0,]
+  
+  #Sets of information
+  vUpreg <- list()
+  vUpreg[[pNames[1]]] <- dbAUfilt[['Genes']]
+  vUpreg[[pNames[2]]] <- dbBUfilt[['Genes']]
+  
+  # Upreg plot
+  upVenn <- ggVennDiagram(vUpreg)
+
+  # downreg
+  dbADfilt <- dbA[dbA$log2FoldChange <= 0,]
+  dbBDfilt <- dbB[dbB$log2FoldChange <= 0,]
+  
+  #Sets of information
+  vDownreg <- list()
+  vDownreg[[pNames[1]]] <- dbADfilt[['Genes']]
+  vDownreg[[pNames[2]]] <- dbBDfilt[['Genes']]
+  
+  # Upreg plot
+  downVenn <- ggVennDiagram(vDownreg)
+  
+  #Make the list
+  resultVenn <- ggarrange(upVenn, downVenn, ncol = 2)
+  
+  return(resultVenn)
+}
+
+#' @export
 preprocComparisons <- function(projectA, projectB, genename) {
   # Ask the database for the table for experiment A
   dbRNARowsA <- queryExperiment(singleExp[[projectA]][['tabid']])
@@ -316,46 +353,55 @@ preprocComparisons <- function(projectA, projectB, genename) {
   dbRNARowsFiltB <- dbRNARowsFiltB[dbRNARowsFiltB$padj < 0.05,]
   dbRNARowsFiltB['Comparison'] <- c(projectB)
   
+  # Generate name
+  projectNameA <- names(displayNames)[displayNames == projectA]
+  projectNameB <- names(displayNames)[displayNames == projectB]
+  projectName <- paste(names(displayNames)[displayNames == projectA], names(displayNames)[displayNames == projectB], sep = ' v ')
+  
+  # Generate the venn diagrams
+  vennDiags <- vennComparison(dbRNARowsFiltA, dbRNARowsFiltB, c(projectNameA, projectNameB))
+
   # Merge both dataframes according to gene
   dbRNARowsMerg <- merge(dbRNARowsFiltA, dbRNARowsFiltB, by=c('EnsGenes','Genes'), all = FALSE)
-  
+
   # Create the base plot
-  plot2 <- ggplot(dbRNARowsMerg, aes(x=log2FoldChange.x, y=log2FoldChange.y)) + 
-    geom_hline(yintercept=0, color = "orange") + 
+  plot2 <- ggplot(dbRNARowsMerg, aes(x=log2FoldChange.x, y=log2FoldChange.y)) +
+    geom_hline(yintercept=0, color = "orange") +
     geom_vline(xintercept=0, color = "orange") +
-    xlab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectA,displayNames)])) + 
+    xlab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectA,displayNames)])) +
     ylab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectB,displayNames)]))
-  
+
   # Display all of the genes or only the listed ones
   if (length(genename) == 0 | length(subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)) == 0) {
     # format the table for download
     dbRNARowsDL <- formatExcelDL(dbRNARowsMerg, projectA, projectB)
-    
+
     # Complete the plot
-    plot2 <- plot2 + geom_point(colour='black') + geom_smooth(method=lm, formula = y ~ x) + 
+    plot2 <- plot2 + geom_point(colour='black') + geom_smooth(method=lm, formula = y ~ x) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..))
   } else {
     # Select only the rows with the genes
     dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
-    
+
     # format the table for download
     dbRNARowsDL <- formatExcelDL(dbRNARowsGlist, projectA, projectB)
-    
+
     # Complete the plot
-    plot2 <- plot2 + 
+    plot2 <- plot2 +
       geom_point(colour='grey') + geom_smooth(method=lm, formula = y ~ x) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
-      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) + 
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) +
       geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red') +
       geom_text(data=dbRNARowsGlist, aes(label=Genes),hjust=0, vjust=0)
   }
 
   # Attach all results to a named list for returning
   preprocResult = list(plotData = plot2,
+                       vennData <- vennDiags,
                        commonData = dbRNARowsDL)
-  
+
   # Return result
   return(preprocResult)
 }
-
+# 

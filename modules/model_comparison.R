@@ -1,6 +1,7 @@
 box::use(
   shiny[...],
   ggplot2[...],
+  ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
   .. / shinyapp / entities[imgLabels,displayNames]
@@ -15,8 +16,8 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
-      selectInput(ns("projectA"), "Project A:", displayNames),
-      selectInput(ns("projectB"), "Project B:", displayNames),
+      selectInput(ns("projectA"), "Project A:", displayNames, selected = 'AcDSS'),
+      selectInput(ns("projectB"), "Project B:", displayNames, selected = 'cDSS'),
       
       selectizeInput(
         ns("genename"),
@@ -55,7 +56,16 @@ ui <- function(id) {
         ns = ns
       ),
       br(),
-      downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton')
+      downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton'),
+      br(),
+      br(),
+      div(
+        class = 'SmallTitleText',
+        textOutput(ns("vennTitleComparison"))
+      ),
+      br(),
+      uiOutput(ns("vennPlot_ui")),
+      br()
     )
   )
 }
@@ -85,14 +95,20 @@ server <- function(input, output, session) {
     sprintf('Comparison of significant fold changes between models %s and %s', names(displayNames)[match(input$projectA,displayNames)], names(displayNames)[match(input$projectB,displayNames)])
   })
   
+  # Render title of Venn diagram set
+  output$vennTitleComparison <- renderText({
+    req(input$projectB)
+    sprintf('Venn diagrams of significant genes between models %s and %s', names(displayNames)[match(input$projectA,displayNames)], names(displayNames)[match(input$projectB,displayNames)])
+  })
+  
   # Make dimensions for the plot
   plot_dimensions <- reactive({
     list(
-      heigth = 750,
+      height = 750,
       width = 750
     )
   })
-  
+    
   # Produce plot
   output$comparisonPlot <- renderPlot({
     req(input$projectB)
@@ -101,7 +117,18 @@ server <- function(input, output, session) {
   
   # Wrap plot in ui for dynamism
   output$comparisonPlot_ui <- renderUI({
-    plotOutput(session$ns("comparisonPlot"), height = plot_dimensions()$heigth, width = plot_dimensions()$width)
+    plotOutput(session$ns("comparisonPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
+  })
+  
+  # Create and render venn diagram plot set
+  output$vennPlot <- renderPlot({
+    req(input$genename,input$project)
+    preprocComparisonsInput()[['vennData']]
+  })
+
+  # Wrap plot in ui for dynamism
+  output$vennPlot_ui <- renderUI({
+    plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
   })
   
   # Render informative note about the gene selection
