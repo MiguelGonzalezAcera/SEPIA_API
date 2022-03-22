@@ -57,6 +57,7 @@ ui <- function(id) {
       ),
       br(),
       downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton'),
+      downloadButton(ns("downloadSCPlot"), 'Download Scatterplot', class = 'DLButton'),
       br(),
       br(),
       div(
@@ -65,6 +66,8 @@ ui <- function(id) {
       ),
       br(),
       uiOutput(ns("vennPlot_ui")),
+      br(),
+      downloadButton(ns("downloadVennPlot"), 'Download Venn diagram', class = 'DLButton'),
       br()
     )
   )
@@ -163,6 +166,32 @@ server <- function(input, output, session) {
       
       # Save the notebook
       saveWorkbook(wb, file = file)
+    }
+  )
+  
+  # Make dowload button for the plot as jpeg in proper resolution
+  output$downloadSCPlot <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'scatter.png'), collapse = "_")
+    },
+    content = function(file) {
+      # plot the thing
+      pSc <- preprocComparisonsInput()[['plotData']]
+      
+      ggsave(file, plot = pSc, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+    }
+  )
+  
+  # Make dowload button for the plot as jpeg in proper resolution
+  output$downloadVennPlot <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'venn.png'), collapse = "_")
+    },
+    content = function(file) {
+      # plot the thing
+      pVd <- preprocComparisonsInput()[['vennData']]
+      
+      ggsave(file, plot = pVd, height = (plot_dimensions()$height/3)*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
     }
   )
 }

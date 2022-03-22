@@ -210,8 +210,10 @@ preprocessing <- function(project, genename) {
     # Display the readable name, and not the code
     projectName <- names(displayNames)[displayNames == proj]
     errored[[projectName]] <- erroredItems
-    # Add display name also to the dataframes
-    clust_df_tmp['ModelName'] <- projectName
+    # Add display name also to the dataframes if they are not empty
+    if (dim(clust_df_tmp)[1] != 0) {
+      clust_df_tmp['ModelName'] <- projectName
+    }
 
     # Merge the fold change data
     if (is.null(clust_df) == T || dim(clust_df)[1] == 0){
@@ -391,7 +393,8 @@ preprocComparisons <- function(projectA, projectB, genename) {
     # Complete the plot
     plot2 <- plot2 + geom_point(colour='black') + geom_smooth(method=lm, formula = y ~ x) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
-      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..))
+      stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) + 
+      theme_bw()
   } else {
     # Select only the rows with the genes
     dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
@@ -405,7 +408,8 @@ preprocComparisons <- function(projectA, projectB, genename) {
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.95, aes(label = ..eq.label..)) +
       stat_regline_equation(label.y = max(dbRNARowsMerg$log2FoldChange.y)*0.9, aes(label = ..rr.label..)) +
       geom_point(data=dbRNARowsGlist, aes(x=log2FoldChange.x,y=log2FoldChange.y), color='red') +
-      geom_text(data=dbRNARowsGlist, aes(label=Genes),hjust=0, vjust=0)
+      geom_text(data=dbRNARowsGlist, aes(label=Genes),hjust=0, vjust=0) + 
+      theme_bw()
   }
 
   # Attach all results to a named list for returning

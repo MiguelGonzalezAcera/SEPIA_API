@@ -219,7 +219,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot.jpeg'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot.png'), collapse = "_")
     },
     content = function(file) {
       # plot the thing
