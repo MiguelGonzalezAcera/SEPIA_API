@@ -7,6 +7,13 @@ box::use(
   ggpubr[...],
   stringr[...],
   ggVennDiagram[...],
+  readxl[...],
+  ComplexHeatmap[...],
+  dendextend[...],
+  cluster[...],
+  gplots[...],
+  circlize[...],
+  grid[...],
   . / entities[fullExp,singleExp,displayNames],
 )
 
@@ -64,7 +71,7 @@ projectPreproc <- function(project) {
   
   # Create the query with the project name
   queryProjText <- sprintf("select * from %s;", project)
-  
+
   # Run the query against the database and fetch the resulting dataframe
   rsProjInsert <- dbSendQuery(projectDb, queryProjText)
   dbProjRows <- dbFetch(rsProjInsert)
@@ -420,4 +427,95 @@ preprocComparisons <- function(projectA, projectB, genename) {
   # Return result
   return(preprocResult)
 }
-# 
+
+#' @export
+getMarkerlist <- function(project, markerID) {
+  # Establish the connection to the projects database
+  markersDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Refs', host='localhost')
+  
+  # Create the query with the project name
+  queryMarkText <- sprintf("select * from %s;", markerID)
+  
+  # Run the query against the database and fetch the resulting dataframe
+  rsMarkInsert <- dbSendQuery(markersDb, queryMarkText)
+  dbMarkRows <- dbFetch(rsMarkInsert)
+  
+  # Clear the query
+  dbClearResult(rsMarkInsert)
+  
+  # Disconnect the database
+  dbDisconnect(markersDb)
+  
+  # Select the gene names
+  genelist <- dbMarkRows[['Genes']]
+
+  # Query the data with the obtained gene list
+  genelistTab <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+  
+  # return Table of the wxperiment with the selected genes
+  return(genelistTab)
+}
+
+#' @export
+readGenelist <- function(project, filepath) {
+  if (endsWith(filepath, '.txt')) {
+    # read txt file
+    genelist <- scan(filepath, character())
+  } else if (endsWith(filepath, '.xlsx')) {
+    # Read excel file
+    genelist <- as.data.frame(read_excel(filename, col_names=FALSE))[,1]
+  }
+  
+  # Query the data with the obtained gene list
+  genelistTab <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+  
+  # return Table of the wxperiment with the selected genes
+  return(genelistTab)
+}
+
+#' @export
+heatmap <- function (project, genelistDF) {
+  # Get data from the project design
+  dbDesRows <- designPreproc(singleExp[[project]][['project']])
+  
+  # Get data from the project design
+  dbProjRows <- projectPreproc(singleExp[[project]][['project']])
+  
+  # Select the row with our project
+  dbProjRows <- dbProjRows[dbProjRows$Comparison == singleExp[[project]][['tabid']],]
+  
+  # Subset design and get length of control
+  dbDesSlice <- dbDesRows[dbDesRows$Treatment == dbProjRows[['Control']] | dbDesRows$Treatment == dbProjRows[['Sample']],]
+
+  # Change unknown gene names to something more fitting for the heatmap calculations
+  rows_hm <- as.character(genelistDF$Genes)
+  
+  new <- 1000:2000
+  rows_hm[is.na(rows_hm)] <- paste("Unk",new[1:sum(is.na(rows_hm))], sep="")
+  rownames(genelistDF) <- rows_hm
+  
+  # Select the columns only with the counts for the heatmap
+  genelistDF <- genelistDF[-which(names(genelistDF) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
+  
+  # Cluster the rows of the data frame
+  hr <- hclust(as.dist(1-cor(t(data.matrix(genelistDF)),
+                             method="pearson")), method="complete")
+  
+  # Establish colors
+  color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
+  
+  # Make the heatmap
+  resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = as.dendrogram(hr),
+                          cluster_columns = FALSE,
+                          row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                          col=color, column_dend_height = unit(5, "cm"),
+                          row_dend_width = unit(2, "cm"),
+                          cluster_column_slices = FALSE,
+                          column_split = factor(dbDesSlice$Treatment),
+                          show_column_names = FALSE
+                          )
+  
+  # Return finished plot
+  return(resultHeatmap)
+}
+

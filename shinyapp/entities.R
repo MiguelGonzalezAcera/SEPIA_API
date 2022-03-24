@@ -116,6 +116,32 @@ modelDescriptions <- list(
 )
 
 #' @export
+geneMarkers <- list(
+  "Mitochondrial genes" = "markers_Mitochondrial",
+  "Dystal enterocytes" = "markers_EnterocyteDist",
+  "Proximal enterocytes" = "markers_EnterocyteProx",
+  "Enteroendocrine cells" = "markers_Enteroendocrine",
+  "Goblet cells" = "markers_Goblet",
+  "M cells" = "markers_Mcells",
+  "Paneth cells" = "markers_Paneth",
+  "Stem cells" = "markers_Stem",
+  "Transit Amplifying cells" = "markers_TAprog",
+  "Tuft cells" = "markers_Tuft",
+  "Fibroblasts" = "markers_Fibroblasts",
+  "Monocyte derived dendritic cells" = "markers_MODC",
+  "Plasma cells" = "markers_Plasma",
+  "T lymphocytes" = "markers_Tcells",
+  "B lymphocytes" = "markers_Bcells",
+  "Mast cells" = "markers_Mast",
+  "NK lymphocytes" = "markers_NK",
+  "Endothelial cells" = "markers_Endothelial",
+  "Neutrophils" = "markers_Neutrophils",
+  "Smooth muscle" = "markers_SmoothMuscle",
+  "Enteric glial cells" = "markers_EntericGlia",
+  "Enteric neurons" = "markers_EntericNeuron"
+)
+
+#' @export
 imgLabels <- list(
   'logo1' = "www/logo1.png"
 )
