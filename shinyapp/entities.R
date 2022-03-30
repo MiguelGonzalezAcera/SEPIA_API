@@ -116,8 +116,7 @@ modelDescriptions <- list(
 )
 
 #' @export
-geneMarkers <- list(
-  "Mitochondrial genes" = "markers_Mitochondrial",
+markerNames <- list(
   "Dystal enterocytes" = "markers_EnterocyteDist",
   "Proximal enterocytes" = "markers_EnterocyteProx",
   "Enteroendocrine cells" = "markers_Enteroendocrine",
@@ -133,6 +132,7 @@ geneMarkers <- list(
   "T lymphocytes" = "markers_Tcells",
   "B lymphocytes" = "markers_Bcells",
   "Mast cells" = "markers_Mast",
+  "Mitochondrial genes" = "markers_Mitochondrial",
   "NK lymphocytes" = "markers_NK",
   "Endothelial cells" = "markers_Endothelial",
   "Neutrophils" = "markers_Neutrophils",

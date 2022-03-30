@@ -14,6 +14,8 @@ box::use(
   gplots[...],
   circlize[...],
   grid[...],
+  clusterProfiler[...],
+  enrichplot[...],
   . / entities[fullExp,singleExp,displayNames],
 )
 
@@ -512,6 +514,7 @@ heatmap <- function (project, genelistDF) {
                           row_dend_width = unit(2, "cm"),
                           cluster_column_slices = FALSE,
                           column_split = factor(dbDesSlice$Treatment),
+                          column_gap = unit(0.5, "cm"),
                           show_column_names = FALSE
                           )
   
@@ -519,3 +522,87 @@ heatmap <- function (project, genelistDF) {
   return(resultHeatmap)
 }
 
+#' @export
+volcanoPlot <- function(project, genelistDF) {
+  # Create the displayable column for the p value
+  genelistDF[['padj_fix']] <- -log10(genelistDF$padj+(1*10^-300))
+  
+  # Filter the dataframe for the genes sign. up and down
+  genelistDFUp <- genelistDF[genelistDF$log2FoldChange >= 1 & genelistDF$padj < 0.05,]
+  genelistDFDw <- genelistDF[genelistDF$log2FoldChange <= -1 & genelistDF$padj < 0.05,]
+
+  # Generate the plot
+  # We put the data in geom_point, because if not, it draws a rectangle per row, one on top of each other, rendering them opaque in the end (https://stackoverflow.com/questions/43511416/how-do-you-control-the-translucence-of-geom-rect-rectangles)
+  plot <- ggplot(genelistDF, aes(x=log2FoldChange, y=padj_fix)) +
+    geom_point(colour='black') + 
+    annotate(
+      "rect",
+      xmin = 1,
+      xmax = Inf,
+      ymin = -log10(0.05),
+      ymax = Inf,
+      linetype = 'blank',
+      fill = 'red',
+      alpha = 0.2
+    ) +
+    annotate(
+      "rect",
+      xmin = -Inf,
+      xmax = -1,
+      ymin = -log10(0.05),
+      ymax = Inf,
+      linetype = 'blank',
+      fill = 'blue',
+      alpha = 0.2
+    ) +
+    ylim(0, max(25, max(genelistDF$padj_fix))) +
+    xlim(
+      min(c(-2, min(genelistDF$log2FoldChange))),
+      max(c(2, max(genelistDF$log2FoldChange)))
+    ) +
+    geom_hline(yintercept=0, color = "orange") +
+    geom_vline(xintercept=0, color = "orange") +
+    xlab('Log2 Fold Change') +
+    ylab('-log10(padj)') +
+    theme_bw()
+  
+  # Add the colored dots (if any)
+  if (dim(genelistDFUp)[1] != 0) {
+    plot <- plot + geom_point(data = genelistDFUp, aes(x=log2FoldChange, y=padj_fix), color = 'red', size = 3)
+  }
+  if (dim(genelistDFDw)[1] != 0) {
+    plot <- plot + geom_point(data = genelistDFDw, aes(x=log2FoldChange, y=padj_fix), color = 'blue', size = 3)
+  }
+  
+  # Return the plot
+  return(plot)
+}
+
+#' @export
+GSEAgraph <- function(project, genelistDF, handle) {
+  # Get the complete table for the project
+  genelistTab <- queryExperiment(singleExp[[project]][['tabid']])
+  
+  # Create the ordered genelist for reference
+  geneList <- genelistTab$log2FoldChange
+  names(geneList) <- genelistTab$EnsGenes
+  
+  # Make the gene groups
+  groups <- data.frame(handle, genelistDF$EnsGenes)
+  
+  # run the GSEA analysis
+  z = GSEA(sort(geneList,decreasing=T), TERM2GENE = groups, pvalueCutoff = 1, minGSSize = 5)
+  
+  # Save the objects
+  GSEAtable <- as.data.frame(z)
+  GSEAplot <- gseaplot2(z, geneSetID = 1, color="red", pvalue_table = FALSE)
+  
+  # Amalgame the results in a list
+  result = list(
+    table_gsea = GSEAtable,
+    plot_GSEA = GSEAplot
+  )
+  
+  # Return the thing
+  return(result)
+}
