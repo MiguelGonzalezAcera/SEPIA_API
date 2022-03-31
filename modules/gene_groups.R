@@ -108,34 +108,21 @@ ui <- function(id) {
 #' @export
 server <- function(input, output, session) {
   # Create reactive values for the genelist
-  genelist <- reactiveValues(genes=c(), title='', heatmapDisplay = FALSE)
+  genelist <- reactiveValues(genes=c(), title='')
   
   # create two observeEvent to select the usable genelist
   observeEvent(input$genelist_markers,{
-    genelist$genes <- getMarkerlist(input$project, input$genelist_markers)
+    genelist$genes <- getMarkerlist(input$genelist_markers)
     genelist$title <- sprintf('Behaviour of the gene markers for %s', input$genelist_markers)
     genelist$errormess <- sprintf('The genes from the %s gene list are unavailable in the selected project', input$genelist_markers)
     genelist$handle <- input$genelist_markers
-    
-    # check if there is data to display
-    if (dim(genelist$genes)[1] > 1) {
-      genelist$heatmapDisplay <- TRUE
-    } else {
-      genelist$heatmapDisplay <- FALSE
-    }
   })
   
   observeEvent(input$genelist_upload,{
-    genelist$genes <- readGenelist(input$project, input$genelist_upload$datapath)
+    genelist$genes <- readGenelist(input$genelist_upload$datapath)
     genelist$title <- 'Behaviour of the uploaded gene list'
     genelist$errormess <- 'The genes from the uploaded gene list are unavailable in the selected project'
     genelist$handle < 'Uploaded gene list'
-    
-    if (dim(genelist$genes)[1] > 1) {
-      genelist$heatmapDisplay <- TRUE
-    } else {
-      genelist$heatmapDisplay <- FALSE
-    }
   })
   
   # Render title of counts plot
@@ -166,7 +153,7 @@ server <- function(input, output, session) {
   # Render fold change table
   output$heatmapTable <- renderTable({
     req(genelist$genes)
-    genelist$genes[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+    queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
   })
   
   # Render informative note about the gene selection
@@ -177,7 +164,12 @@ server <- function(input, output, session) {
   
   # Check if it has to display the plots
   output$heatmapDisplay <- reactive({
-    genelist$heatmapDisplay
+    # check if there is data to display
+    if (dim(queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')])[1] > 1) {
+      TRUE
+    } else {
+      FALSE
+    }
   })
   outputOptions(session$output, "heatmapDisplay", suspendWhenHidden = FALSE)
   

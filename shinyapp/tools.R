@@ -431,7 +431,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
 }
 
 #' @export
-getMarkerlist <- function(project, markerID) {
+getMarkerlist <- function(markerID) {
   # Establish the connection to the projects database
   markersDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Refs', host='localhost')
   
@@ -451,15 +451,12 @@ getMarkerlist <- function(project, markerID) {
   # Select the gene names
   genelist <- dbMarkRows[['Genes']]
 
-  # Query the data with the obtained gene list
-  genelistTab <- queryExperiment(singleExp[[project]][['tabid']], genelist)
-  
   # return Table of the wxperiment with the selected genes
-  return(genelistTab)
+  return(genelist)
 }
 
 #' @export
-readGenelist <- function(project, filepath) {
+readGenelist <- function(filepath) {
   if (endsWith(filepath, '.txt')) {
     # read txt file
     genelist <- scan(filepath, character())
@@ -468,15 +465,15 @@ readGenelist <- function(project, filepath) {
     genelist <- as.data.frame(read_excel(filename, col_names=FALSE))[,1]
   }
   
-  # Query the data with the obtained gene list
-  genelistTab <- queryExperiment(singleExp[[project]][['tabid']], genelist)
-  
   # return Table of the wxperiment with the selected genes
-  return(genelistTab)
+  return(genelist)
 }
 
 #' @export
-heatmap <- function (project, genelistDF) {
+heatmap <- function (project, genelist) {
+  # Query the data with the obtained gene list
+  genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+  
   # Get data from the project design
   dbDesRows <- designPreproc(singleExp[[project]][['project']])
   
@@ -523,7 +520,10 @@ heatmap <- function (project, genelistDF) {
 }
 
 #' @export
-volcanoPlot <- function(project, genelistDF) {
+volcanoPlot <- function(project, genelist) {
+  # Query the data with the obtained gene list
+  genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+  
   # Create the displayable column for the p value
   genelistDF[['padj_fix']] <- -log10(genelistDF$padj+(1*10^-300))
   
@@ -579,8 +579,10 @@ volcanoPlot <- function(project, genelistDF) {
 }
 
 #' @export
-GSEAgraph <- function(project, genelistDF, handle) {
-  # Get the complete table for the project
+GSEAgraph <- function(project, genelist, handle) {
+  # Query the data with the obtained gene list
+  genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+  
   genelistTab <- queryExperiment(singleExp[[project]][['tabid']])
   
   # Create the ordered genelist for reference
@@ -606,3 +608,4 @@ GSEAgraph <- function(project, genelistDF, handle) {
   # Return the thing
   return(result)
 }
+
