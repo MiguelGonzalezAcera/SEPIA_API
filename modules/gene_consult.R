@@ -168,7 +168,7 @@ server <- function(input, output, session) {
   
   # Wrap in ui for dynamism
   output$countsPlot_ui <- renderUI({
-    plotOutput(session$ns("countsPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
+    shinycssloaders::withSpinner(plotOutput(session$ns("countsPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Render the title

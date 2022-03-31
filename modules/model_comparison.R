@@ -120,7 +120,7 @@ server <- function(input, output, session) {
   
   # Wrap plot in ui for dynamism
   output$comparisonPlot_ui <- renderUI({
-    plotOutput(session$ns("comparisonPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width)
+    shinycssloaders::withSpinner(plotOutput(session$ns("comparisonPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Create and render venn diagram plot set
@@ -131,7 +131,7 @@ server <- function(input, output, session) {
 
   # Wrap plot in ui for dynamism
   output$vennPlot_ui <- renderUI({
-    plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height/3, width = plot_dimensions()$width)
+    shinycssloaders::withSpinner(plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height/3, width = plot_dimensions()$width), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Render informative note about the gene selection
