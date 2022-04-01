@@ -218,23 +218,30 @@ preprocessing <- function(project, genename) {
     erroredItems <- genename[which(!genename %in% clust_df_tmp[['Genes']])]
     # Display the readable name, and not the code
     projectName <- names(displayNames)[displayNames == proj]
-    errored[[projectName]] <- erroredItems
+    
+    # Add the gene if it has failed
+    if (length(erroredItems) >= 1) {
+      errored[[projectName]] <- erroredItems
+    }
+    
     # Add display name also to the dataframes if they are not empty
     if (dim(clust_df_tmp)[1] != 0) {
       clust_df_tmp['ModelName'] <- projectName
     }
 
     # Merge the fold change data
-    if (is.null(clust_df) == T || dim(clust_df)[1] == 0){
-      # If the final df is empty, fill it with one column
-      clust_df <- clust_df_tmp
-    } else {
-      # If not, add the column to the df. Select columns if this is the case
-      clust_df <- clust_df[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
-      clust_df_tmp <- clust_df_tmp[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
-      clust_df <- rbind(clust_df, clust_df_tmp)
+    if (dim(clust_df_tmp)[1] != 0) {
+      if (is.null(clust_df) == T){
+        # If the final df is empty, fill it with one column
+        clust_df <- clust_df_tmp
+      } else {
+        # If not, add the column to the df. Select columns if this is the case
+        clust_df <- clust_df[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+        clust_df_tmp <- clust_df_tmp[c('id','ModelName','EnsGenes','log2FoldChange','pvalue','padj','Genes')]
+        clust_df <- rbind(clust_df, clust_df_tmp)
+      }
     }
-    
+
     # Loop throught the genes
     for (gene in genename) {
       # Get the counts data
@@ -278,6 +285,7 @@ preprocessing <- function(project, genename) {
                        plotDispl = plotDispl,
                        errDispl = errDispl
                        )
+  
   # Return result
   return(preprocResult)
 }
@@ -485,6 +493,10 @@ heatmap <- function (project, genelist) {
   
   # Subset design and get length of control
   dbDesSlice <- dbDesRows[dbDesRows$Treatment == dbProjRows[['Control']] | dbDesRows$Treatment == dbProjRows[['Sample']],]
+  # Transform the treatment column into a factor with the control first
+  dbDesSlice$Treatment <- factor(dbDesSlice$Treatment, levels = c(dbProjRows[['Control']], dbProjRows[['Sample']]))
+  # Sort by the factor levels to get the control always on the left of the heatmap
+  dbDesSlice <- dbDesSlice[order(dbDesSlice$Treatment),]
 
   # Change unknown gene names to something more fitting for the heatmap calculations
   rows_hm <- as.character(genelistDF$Genes)
@@ -492,7 +504,7 @@ heatmap <- function (project, genelist) {
   new <- 1000:2000
   rows_hm[is.na(rows_hm)] <- paste("Unk",new[1:sum(is.na(rows_hm))], sep="")
   rownames(genelistDF) <- rows_hm
-  
+
   # Select the columns only with the counts for the heatmap
   genelistDF <- genelistDF[-which(names(genelistDF) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
   
@@ -502,15 +514,15 @@ heatmap <- function (project, genelist) {
   
   # Establish colors
   color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
-  
+
   # Make the heatmap
   resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = as.dendrogram(hr),
                           cluster_columns = FALSE,
                           row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
                           col=color, column_dend_height = unit(5, "cm"),
                           row_dend_width = unit(2, "cm"),
-                          cluster_column_slices = FALSE,
                           column_split = factor(dbDesSlice$Treatment),
+                          cluster_column_slices = FALSE,
                           column_gap = unit(0.5, "cm"),
                           show_column_names = FALSE
                           )

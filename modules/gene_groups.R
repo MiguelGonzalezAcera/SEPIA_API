@@ -72,9 +72,14 @@ ui <- function(id) {
             uiOutput(ns("heatmapResult_ui"))
           ),
           br(),
-          div(style='margin-left:275px',
+          div(style='margin-left:275px; height:400px; width: 650px; overflow-y: scroll;',
             tableOutput(ns("heatmapTable"))
           ),
+          br(),
+          downloadButton(ns("downloadHmap"), 'Download Heatmap', class = 'DLButton'),
+          downloadButton(ns("downloadTable"), 'Download Table', class = 'DLButton'),
+          br(),
+          br(),
           br(),
           div(style='display: flex;',
             div(
@@ -84,7 +89,9 @@ ui <- function(id) {
                 'Volcano plot'
               ),
               br(),
-              uiOutput(ns("volcanoResult_ui"))
+              uiOutput(ns("volcanoResult_ui")),
+              br(),
+              downloadButton(ns("downloadVolc"), 'Download Volcano plot', class = 'DLButton')
             ),
             div(
               style='margin-left: 60px;',
@@ -95,7 +102,9 @@ ui <- function(id) {
               br(),
               uiOutput(ns("GSEAResult_ui")),
               br(),
-              tableOutput(ns("GSEATable"))
+              tableOutput(ns("GSEATable")),
+              downloadButton(ns("downloadGSEA"), 'Download GSEA Plot', class = 'DLButton'),
+              downloadButton(ns("downloadGSEATable"), 'Download GSEA Table', class = 'DLButton')
             )
           )
         ),
@@ -181,7 +190,7 @@ server <- function(input, output, session) {
   
   # Wrap
   output$volcanoResult_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("volcanoResult"), height = plot_dimensions()$height/1.6, width = plot_dimensions()$width/1.6), type = 2, color="#f88e06", color.background = "white")
+    shinycssloaders::withSpinner(plotOutput(session$ns("volcanoResult"), height = plot_dimensions()$height/1.65, width = plot_dimensions()$width/1.65), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Generate the volcano plot
@@ -189,6 +198,7 @@ server <- function(input, output, session) {
     req(genelist$genes)
     GSEAresultList <- GSEAgraph(input$project, genelist$genes, genelist$handle)
     genelist$GSEAtableResult <- GSEAresultList[['table_gsea']]
+    genelist$GSEAplotResult <- GSEAresultList[['plot_GSEA']]
     GSEAresultList[['plot_GSEA']]
   })
   
@@ -211,32 +221,61 @@ server <- function(input, output, session) {
   })
   
   # Make downloadeable table in excel
-  output$downloadData <- downloadHandler(
+  output$downloadTable <- downloadHandler(
     filename = function() {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'FoldChange.xlsx'), collapse = "_")
     },
     content = function(file) {
-      write.xlsx(preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')], file)
+      write.xlsx(queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')], file)
     }
   )
   
-  # Make dowload button for the plot as jpeg in proper resolution
-  output$downloadPlot <- downloadHandler(
+  # Make dowload button for the plot as png in proper resolution
+  output$downloadHmap <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap.png'), collapse = "_")
     },
     content = function(file) {
-      # plot the thing
-      pGC <- ggarrange(
-        plotlist = preprocResultInput()[['countsData']], 
-        ncol = ifelse(
-          length(unique(preprocResultInput()[['foldChangeData']][['ModelName']])) > 2,
-          3,
-          length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))
-        ),
-        nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))/3)
-      )
-      ggsave(file, plot = pGC, device = 'jpeg', height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+      # Generate the plot
+      hmPlot <- heatmap(input$project, genelist$genes)
+      
+      # Save the image
+      ggsave(file, plot = hmPlot, device = 'png', height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+    }
+  )
+  
+  output$downloadVolc <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'Volcano.png'), collapse = "_")
+    },
+    content = function(file) {
+      # Generate the plot
+      vcPlot <- volcanoPlot(input$project, genelist$genes)
+      
+      # Save the image
+      ggsave(file, plot = vcPlot, device = 'png', height = (plot_dimensions()$height/1.6)*10, width = (plot_dimensions()$width/1.6)*10, dpi = 650, units = "px")
+    }
+  )
+  
+  output$downloadGSEA <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA.png'), collapse = "_")
+    },
+    content = function(file) {
+      # Generate the plot
+      GSEAresult <- genelist$GSEAplotResult
+      
+      # Save the image
+      ggsave(file, plot = GSEAresult, device = 'png', height = (plot_dimensions()$height/2)*10, width = (plot_dimensions()$width/2)*10, dpi = 650, units = "px")
+    }
+  )
+  
+  output$downloadGSEATable <- downloadHandler(
+    filename = function() {
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA.xlsx'), collapse = "_")
+    },
+    content = function(file) {
+      write.xlsx(genelist$GSEAtableResult[c('Description','enrichmentScore', 'pvalue', 'p.adjust')], file)
     }
   )
 }

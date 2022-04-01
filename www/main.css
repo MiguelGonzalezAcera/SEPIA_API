@@ -53,6 +53,7 @@ ul li a:hover {
   border-style: solid;
   border-color: #ff0000;
   width:600px;
+  padding-bottom: 25px;
 }
 
 .errorText {
