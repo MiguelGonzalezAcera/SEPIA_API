@@ -8,6 +8,7 @@ box::use(
   gplots[...],
   circlize[...],
   openxlsx[...],
+  grid[...],
   .. / shinyapp / tools[...],
   .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames,markerNames]
 )
@@ -236,11 +237,8 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap.png'), collapse = "_")
     },
     content = function(file) {
-      # Generate the plot
-      hmPlot <- heatmap(input$project, genelist$genes)
-      
       # Save the image
-      ggsave(file, plot = hmPlot, device = 'png', height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+      ggsave(file, plot = grid.grabExpr(draw(heatmap(input$project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
     }
   )
   
@@ -249,11 +247,9 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'Volcano.png'), collapse = "_")
     },
     content = function(file) {
-      # Generate the plot
-      vcPlot <- volcanoPlot(input$project, genelist$genes)
-      
       # Save the image
-      ggsave(file, plot = vcPlot, device = 'png', height = (plot_dimensions()$height/1.6)*10, width = (plot_dimensions()$width/1.6)*10, dpi = 650, units = "px")
+      print(class(volcanoPlot(input$project, genelist$genes)))
+      ggsave(file, plot = volcanoPlot(input$project, genelist$genes), height = (plot_dimensions()$height/1.6)*10, width = (plot_dimensions()$width/1.6)*10, dpi = 650, units = "px")
     }
   )
   
@@ -262,11 +258,8 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA.png'), collapse = "_")
     },
     content = function(file) {
-      # Generate the plot
-      GSEAresult <- genelist$GSEAplotResult
-      
       # Save the image
-      ggsave(file, plot = GSEAresult, device = 'png', height = (plot_dimensions()$height/2)*10, width = (plot_dimensions()$width/2)*10, dpi = 650, units = "px")
+      ggsave(file, plot = genelist$GSEAplotResult, height = (plot_dimensions()$height/2)*10, width = (plot_dimensions()$width/2)*10, dpi = 650, units = "px")
     }
   )
   

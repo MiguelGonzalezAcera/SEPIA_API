@@ -232,7 +232,7 @@ server <- function(input, output, session) {
         ),
         nrow = ceiling(length(unique(preprocResultInput()[['foldChangeData']][['ModelName']]))/3)
       )
-      ggsave(file, plot = pGC, device = 'jpeg', height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+      ggsave(file, plot = pGC, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
     }
   )
 }
