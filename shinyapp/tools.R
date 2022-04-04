@@ -91,7 +91,7 @@ projectPreproc <- function(project) {
 #' @export
 queryExperiment <- function(tabname, genename = c()) {
   # Establish the connection to the database
-  dbconnection <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='RNAseq', host='localhost')
+  dbconnection <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='SEPIA', host='localhost')
   
   # create the query dor the rnaseq db 
   queryRNAText <- sprintf("select * from %s;", tabname)
@@ -537,11 +537,11 @@ volcanoPlot <- function(project, genelist) {
   genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
   
   # Create the displayable column for the p value
-  genelistDF[['padj_fix']] <- -log10(genelistDF$padj+(1*10^-300))
+  genelistDF[['padj_fix']] <- -log10(genelistDF$pvalue+(1*10^-31))
   
   # Filter the dataframe for the genes sign. up and down
-  genelistDFUp <- genelistDF[genelistDF$log2FoldChange >= 1 & genelistDF$padj < 0.05,]
-  genelistDFDw <- genelistDF[genelistDF$log2FoldChange <= -1 & genelistDF$padj < 0.05,]
+  genelistDFUp <- genelistDF[genelistDF$log2FoldChange >= 1 & genelistDF$pvalue < 0.05,]
+  genelistDFDw <- genelistDF[genelistDF$log2FoldChange <= -1 & genelistDF$pvalue < 0.05,]
 
   # Generate the plot
   # We put the data in geom_point, because if not, it draws a rectangle per row, one on top of each other, rendering them opaque in the end (https://stackoverflow.com/questions/43511416/how-do-you-control-the-translucence-of-geom-rect-rectangles)

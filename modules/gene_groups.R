@@ -76,6 +76,16 @@ ui <- function(id) {
           div(style='margin-left:275px; height:400px; width: 650px; overflow-y: scroll;',
             tableOutput(ns("heatmapTable"))
           ),
+          div(style='margin-left:275px',
+            class = 'fcTableNoteFrame',
+            div(
+              class = 'NoteFrame',
+              div(
+                class = 'NoteContent',
+                htmlOutput(ns('fctableNote'))
+              )
+            )
+          ),
           br(),
           downloadButton(ns("downloadHmap"), 'Download Heatmap', class = 'DLButton'),
           downloadButton(ns("downloadTable"), 'Download Table', class = 'DLButton'),
@@ -168,7 +178,7 @@ server <- function(input, output, session) {
   
   # Render informative note about the gene selection
   output$fctableNote <- renderText({
-    req(output$heatmapTable)
+    req(genelist$genes)
     '<b>NOTE:</b> Because there are different models being displayed, the statistical indicator to consider is the <b>P adjusted value</b>, not the P value.'
   })
   
@@ -248,7 +258,6 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       # Save the image
-      print(class(volcanoPlot(input$project, genelist$genes)))
       ggsave(file, plot = volcanoPlot(input$project, genelist$genes), height = (plot_dimensions()$height/1.6)*10, width = (plot_dimensions()$width/1.6)*10, dpi = 650, units = "px")
     }
   )
