@@ -107,7 +107,7 @@ server <- function(input, output, session) {
     session,
     "genename",
     choices = geneLabels()$mouse_genes,
-    selected = c("S100a8","Vil1"),
+    selected = c("ENSMUSG00000056054","ENSMUSG00000026175"),
     server = TRUE
   )
   

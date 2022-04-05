@@ -25,7 +25,7 @@ geneLabels <- function(){
   projectsRefDb <- dbConnect(RMariaDB::MariaDB(), user='sepia', password="sepia_TRR241", dbname='Refs', host='localhost')
   
   # Create the query with the project name
-  queryRefText <- "select Genes from mouse_genes;"
+  queryRefText <- "select EnsGenes,Genes from mouse_genes;"
   
   # Run the query against the database and fetch the resulting dataframe
   rsRefInsert <- dbSendQuery(projectsRefDb, queryRefText)
@@ -37,10 +37,15 @@ geneLabels <- function(){
   # Disconnect the database
   dbDisconnect(projectsRefDb)
   
+  # Make the mouse list
+  mouse_genelist <- as.list(dbRefCol[['EnsGenes']])
+  names(mouse_genelist) <- as.vector(dbRefCol[['Genes']])
+  
   # return List of genes with a name
   geneLabelsList <- list(
-    'mouse_genes' = unique(as.vector(dbRefCol[['Genes']]))
+    'mouse_genes' = mouse_genelist
   )
+
   return(geneLabelsList)
 }
 
@@ -102,7 +107,7 @@ queryExperiment <- function(tabname, genename = c()) {
 
   # filter by genename(s) if genelist has genes
   if (length(genename) > 0) {
-    dbRNARows <- subset(dbRNARows, dbRNARows$Genes %in% genename)
+    dbRNARows <- subset(dbRNARows, dbRNARows$EnsGenes %in% genename)
   }
   
   # Clear query
@@ -137,6 +142,9 @@ preprocDCdataSingle <- function(project, genename) {
 preprocCountsDataSingle <- function(project, dbDesRows, dbProjRows, genename) {
   # Run the query database function
   dbRNARows <- queryExperiment(project, genename)
+  
+  # Replace the ensembl id array by the gene names
+  genename <- dbRNARows[['Genes']]
   
   # Select the row with our project
   dbProjRows <- dbProjRows[dbProjRows$Comparison == project,]
@@ -215,13 +223,13 @@ preprocessing <- function(project, genename) {
     clust_df_tmp <- preprocDCdataSingle(singleExp[[proj]][['tabid']], genename)
     
     # Check empty dataframes and missing genes, store them in the error package
-    erroredItems <- genename[which(!genename %in% clust_df_tmp[['Genes']])]
+    erroredItems <- genename[which(!genename %in% clust_df_tmp[['EnsGenes']])]
     # Display the readable name, and not the code
     projectName <- names(displayNames)[displayNames == proj]
     
     # Add the gene if it has failed
     if (length(erroredItems) >= 1) {
-      errored[[projectName]] <- erroredItems
+      errored[[projectName]] <- names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes %in% erroredItems]
     }
     
     # Add display name also to the dataframes if they are not empty
@@ -252,13 +260,16 @@ preprocessing <- function(project, genename) {
         # Select only the interesting columns
         contsDf2 <- countsDf[c('Treatment','Counts')]
         
+        # Transform the name of the gene from ensemblidinto geneid
+        geneID <- names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == gene]
+        
         # Create the boxplot with the extracted data
         geneBplot <- ggplot(contsDf2, aes(x=Treatment, y=Counts)) + 
           geom_boxplot() +
-          ggtitle(paste(gene, projectName, sep = ' - '))
+          ggtitle(paste(geneID, projectName, sep = ' - '))
         
         # Add plot to list
-        countsBox[[paste(gene, projectName, sep = '_')]] <- geneBplot
+        countsBox[[paste(geneID, projectName, sep = '_')]] <- geneBplot
       }
     }
   }
@@ -403,7 +414,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
     ylab(sprintf("Log2 Fold Change of %s", names(displayNames)[match(projectB,displayNames)]))
 
   # Display all of the genes or only the listed ones
-  if (length(genename) == 0 | length(subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)) == 0) {
+  if (length(genename) == 0 | length(subset(dbRNARowsMerg, dbRNARowsMerg$EnsGenes %in% genename)) == 0) {
     # format the table for download
     dbRNARowsDL <- formatExcelDL(dbRNARowsMerg, projectA, projectB)
 
@@ -414,7 +425,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
       theme_bw()
   } else {
     # Select only the rows with the genes
-    dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$Genes %in% genename)
+    dbRNARowsGlist <- subset(dbRNARowsMerg, dbRNARowsMerg$EnsGenes %in% genename)
 
     # format the table for download
     dbRNARowsDL <- formatExcelDL(dbRNARowsGlist, projectA, projectB)
@@ -457,7 +468,7 @@ getMarkerlist <- function(markerID) {
   dbDisconnect(markersDb)
   
   # Select the gene names
-  genelist <- dbMarkRows[['Genes']]
+  genelist <- dbMarkRows[['EnsGenes']]
 
   # return Table of the wxperiment with the selected genes
   return(genelist)
@@ -473,7 +484,10 @@ readGenelist <- function(filepath) {
     genelist <- as.data.frame(read_excel(filename, col_names=FALSE))[,1]
   }
   
-  # return Table of the wxperiment with the selected genes
+  # Translate the gene names into ensembl ids
+  genelist <- unlist(geneLabels()$mouse_genes[genelist], use.names = F)
+  
+  # return character vector with the selected genes
   return(genelist)
 }
 
@@ -501,22 +515,25 @@ heatmap <- function (project, genelist) {
   # Change unknown gene names to something more fitting for the heatmap calculations
   rows_hm <- as.character(genelistDF$Genes)
   
-  new <- 1000:2000
-  rows_hm[is.na(rows_hm)] <- paste("Unk",new[1:sum(is.na(rows_hm))], sep="")
+  rows_hm[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA'] <- as.character(genelistDF$EnsGenes)[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA']
   rownames(genelistDF) <- rows_hm
 
   # Select the columns only with the counts for the heatmap
   genelistDF <- genelistDF[-which(names(genelistDF) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
   
-  # Cluster the rows of the data frame
-  hr <- hclust(as.dist(1-cor(t(data.matrix(genelistDF)),
-                             method="pearson")), method="complete")
+  # Cluster the rows of the data frame. Insert into a trycatch in case some thing odd happens
+  hr = tryCatch({
+    as.dendrogram(hclust(as.dist(1-cor(t(data.matrix(genelistDF)),
+                                       method="pearson")), method="complete"))
+  }, error = function(e) {
+    FALSE
+  })
   
   # Establish colors
   color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
 
   # Make the heatmap
-  resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = as.dendrogram(hr),
+  resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
                           cluster_columns = FALSE,
                           row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
                           col=color, column_dend_height = unit(5, "cm"),
@@ -598,14 +615,14 @@ GSEAgraph <- function(project, genelist, handle) {
   genelistTab <- queryExperiment(singleExp[[project]][['tabid']])
   
   # Create the ordered genelist for reference
-  geneList <- genelistTab$log2FoldChange
-  names(geneList) <- genelistTab$EnsGenes
+  gene_List <- genelistTab$log2FoldChange
+  names(gene_List) <- genelistTab$EnsGenes
   
   # Make the gene groups
   groups <- data.frame(handle, genelistDF$EnsGenes)
   
   # run the GSEA analysis
-  z = GSEA(sort(geneList,decreasing=T), TERM2GENE = groups, pvalueCutoff = 1, minGSSize = 5)
+  z = GSEA(sort(gene_List,decreasing=T), TERM2GENE = groups, pvalueCutoff = 1, minGSSize = 5)
   
   # Save the objects
   GSEAtable <- as.data.frame(z)

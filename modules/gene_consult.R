@@ -113,7 +113,7 @@ server <- function(input, output, session) {
     session,
     "genename",
     choices = geneLabels()$mouse_genes,
-    selected = c('S100a8'),
+    selected = c('ENSMUSG00000056054'),
     server = TRUE
   )
   
@@ -135,7 +135,7 @@ server <- function(input, output, session) {
   # Render title of counts plot
   output$resultTitleCounts <- renderText({
     req(input$genename,input$project)
-    sprintf('Counts of %s in the selected models', input$genename)
+    sprintf('Counts of %s in the selected models', names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == input$genename])
   })
   
   # Make dimensions for the plot
@@ -174,7 +174,7 @@ server <- function(input, output, session) {
   # Render the title
   output$resultTitle <- renderText({
     req(input$genename,input$project)
-    sprintf('Fold change of %s in the selected models', input$genename)
+    sprintf('Fold change of %s in the selected models', names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == input$genename])
   })
   
   # Render fold change table
