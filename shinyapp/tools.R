@@ -164,6 +164,7 @@ preprocCountsDataSingle <- function(project, dbDesRows, dbProjRows, genename) {
 
     # Merge left the dataframe with the design table
     mdb <- merge(x=wdb, y=dbDesRows, by='Sample', all.x=TRUE)
+    mdb <- mdb[order(mdb$Treatment),]
     
     # Check if any of the genes is not in the column names and drop em
     errored <- setdiff(genename, colnames(mdb))
@@ -198,7 +199,7 @@ preprocCountsDataSingle <- function(project, dbDesRows, dbProjRows, genename) {
     
     # Add project column
     fdf['Comparison'] = project
-    
+
     # Return processed dataframe
     return(fdf)
   }
@@ -254,17 +255,17 @@ preprocessing <- function(project, genename) {
     for (gene in genename) {
       # Get the counts data
       countsDf <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, dbProjRows, gene)
-      
+
       # Check if it is empty
       if (dim(countsDf)[1] != 0) {
         # Select only the interesting columns
-        contsDf2 <- countsDf[c('Treatment','Counts')]
-        
+        countsDf2 <- countsDf[c('Treatment','Counts')]
+
         # Transform the name of the gene from ensemblidinto geneid
         geneID <- names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == gene]
         
         # Create the boxplot with the extracted data
-        geneBplot <- ggplot(contsDf2, aes(x=Treatment, y=Counts)) + 
+        geneBplot <- ggplot(countsDf2, aes(x=Treatment, y=Counts)) + 
           geom_boxplot() +
           ggtitle(paste(geneID, projectName, sep = ' - '))
         

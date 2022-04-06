@@ -15,7 +15,7 @@ ui <- function(id) {
   
   div(
     # Application title
-    headerPanel("Gene query"),
+    headerPanel("Gene consult"),
     
     # Application sidebar
     sidebarPanel(
