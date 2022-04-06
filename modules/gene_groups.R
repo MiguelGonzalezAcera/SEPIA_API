@@ -133,8 +133,8 @@ server <- function(input, output, session) {
   # create two observeEvent to select the usable genelist
   observeEvent(input$genelist_markers,{
     genelist$genes <- getMarkerlist(input$genelist_markers)
-    genelist$title <- sprintf('Behaviour of the gene markers for %s', input$genelist_markers)
-    genelist$errormess <- sprintf('The genes from the %s gene list are unavailable in the selected project', input$genelist_markers)
+    genelist$title <- sprintf('Behaviour of the gene markers for %s', names(markerNames)[match(input$genelist_markers,markerNames)])
+    genelist$errormess <- sprintf('The genes from the %s gene list are unavailable in the selected project', names(markerNames)[match(input$genelist_markers,markerNames)])
     genelist$handle <- input$genelist_markers
   })
   
