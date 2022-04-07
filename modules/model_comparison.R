@@ -39,36 +39,56 @@ ui <- function(id) {
         textOutput(ns("resultTitleComparison"))
       ),
       br(),
-      uiOutput(ns("comparisonPlot_ui")),
-      br(),
       conditionalPanel(
-        condition = "output.noteDisplay == true",
+        condition = "output.sameprojErrorDisplay == false",
         div(
-          class = 'comparisonPlotNoteFrame',
-          div(
-            class = 'NoteFrame',
+          uiOutput(ns("comparisonPlot_ui")),
+          br(),
+          conditionalPanel(
+            condition = "output.noteDisplay == true",
             div(
-              class = 'NoteContent',
-              htmlOutput(ns('genelistNote'))
-            )
-          )
+              class = 'comparisonPlotNoteFrame',
+              div(
+                class = 'NoteFrame',
+                div(
+                  class = 'NoteContent',
+                  htmlOutput(ns('genelistNote'))
+                )
+              )
+            ),
+            ns = ns
+          ),
+          br(),
+          downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton'),
+          downloadButton(ns("downloadSCPlot"), 'Download Scatterplot', class = 'DLButton'),
+          br(),
+          br(),
+          div(
+            class = 'SmallTitleText',
+            textOutput(ns("vennTitleComparison"))
+          ),
+          br(),
+          uiOutput(ns("vennPlot_ui")),
+          br(),
+          downloadButton(ns("downloadVennPlot"), 'Download Venn diagram', class = 'DLButton'),
+          br()
         ),
         ns = ns
       ),
-      br(),
-      downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton'),
-      downloadButton(ns("downloadSCPlot"), 'Download Scatterplot', class = 'DLButton'),
-      br(),
-      br(),
-      div(
-        class = 'SmallTitleText',
-        textOutput(ns("vennTitleComparison"))
-      ),
-      br(),
-      uiOutput(ns("vennPlot_ui")),
-      br(),
-      downloadButton(ns("downloadVennPlot"), 'Download Venn diagram', class = 'DLButton'),
-      br()
+      conditionalPanel(
+        condition = "output.sameprojErrorDisplay == true",
+        div(
+          class = 'errorFrame',
+          br(),
+          div(
+            class = 'errorText',
+            p('Please, select two different experiments.'),
+            br(),
+            tableOutput(ns("errorTable"))
+          )
+        ),
+        ns = ns
+      )
     )
   )
 }
@@ -85,6 +105,12 @@ server <- function(input, output, session) {
     selected = c(),
     server = TRUE
   )
+  
+  # Check if the two projects are the same
+  output$sameprojErrorDisplay <- reactive({
+    input$projectA == input$projectB
+  })
+  outputOptions(session$output, "sameprojErrorDisplay", suspendWhenHidden = FALSE)
   
   # Preprocess the data
   preprocComparisonsInput <- reactive({
