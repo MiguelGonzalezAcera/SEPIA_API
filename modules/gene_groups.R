@@ -76,6 +76,7 @@ ui <- function(id) {
           div(style='margin-left:275px; height:400px; width: 650px; overflow-y: scroll;',
             tableOutput(ns("heatmapTable"))
           ),
+          br(),
           div(style='margin-left:275px',
             class = 'fcTableNoteFrame',
             div(
