@@ -443,6 +443,7 @@ preprocComparisons <- function(projectA, projectB, genename) {
 
   # Attach all results to a named list for returning
   preprocResult = list(plotData = plot2,
+                       fullData = dbRNARowsMerg,
                        vennData = vennDiags,
                        commonData = dbRNARowsDL)
 

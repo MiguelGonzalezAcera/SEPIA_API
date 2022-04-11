@@ -42,7 +42,10 @@ ui <- function(id) {
       conditionalPanel(
         condition = "output.sameprojErrorDisplay == false",
         div(
-          uiOutput(ns("comparisonPlot_ui")),
+          plotOutput(ns("comparisonPlot"), height = 650, width = 650, click = ns("gene_name")),
+          div(style='width: 650px;',
+            verbatimTextOutput(ns("gene_info"))
+          ),
           br(),
           conditionalPanel(
             condition = "output.noteDisplay == true",
@@ -129,14 +132,6 @@ server <- function(input, output, session) {
     req(input$projectB)
     sprintf('Venn diagrams of significant genes between models %s and %s', names(displayNames)[match(input$projectA,displayNames)], names(displayNames)[match(input$projectB,displayNames)])
   })
-  
-  # Make dimensions for the plot
-  plot_dimensions <- reactive({
-    list(
-      height = 650,
-      width = 650
-    )
-  })
     
   # Produce plot
   output$comparisonPlot <- renderPlot({
@@ -144,9 +139,15 @@ server <- function(input, output, session) {
     preprocComparisonsInput()[['plotData']]
   })
   
-  # Wrap plot in ui for dynamism
-  output$comparisonPlot_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("comparisonPlot"), height = plot_dimensions()$height, width = plot_dimensions()$width), type = 2, color="#f88e06", color.background = "white")
+  # Render the text for the clicking on the dots
+  output$gene_info <- renderPrint({
+    # With base graphics, need to tell it what the x and y variables are.
+    clicked <- nearPoints(preprocComparisonsInput()[['fullData']], input$gene_name, threshold = 10, xvar = "log2FoldChange.x", yvar = "log2FoldChange.y")[["Genes"]]
+    if (length(clicked) == 0) {
+      "Please, click one gene."
+    } else {
+      sprintf("Gene: %s", clicked)
+    }
   })
   
   # Create and render venn diagram plot set
@@ -157,7 +158,7 @@ server <- function(input, output, session) {
 
   # Wrap plot in ui for dynamism
   output$vennPlot_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("vennPlot"), height = plot_dimensions()$height/2, width = plot_dimensions()$width*1.2), type = 2, color="#f88e06", color.background = "white")
+    shinycssloaders::withSpinner(plotOutput(session$ns("vennPlot"), height = 650/2, width = 650*1.2), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Render informative note about the gene selection
