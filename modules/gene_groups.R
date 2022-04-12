@@ -70,7 +70,7 @@ ui <- function(id) {
         condition = "output.heatmapDisplay == true",
         div(
           div(style='margin-left:200px',
-            uiOutput(ns("heatmapResult_ui"))
+            shinycssloaders::withSpinner(plotOutput(ns("heatmapResult"), height = 750, width = 750), type = 2, color="#f88e06", color.background = "white")
           ),
           br(),
           div(style='margin-left:275px; height:400px; width: 650px; overflow-y: scroll;',
@@ -101,7 +101,7 @@ ui <- function(id) {
                 'Volcano plot'
               ),
               br(),
-              uiOutput(ns("volcanoResult_ui")),
+              shinycssloaders::withSpinner(plotOutput(ns("volcanoResult"), height = 750/1.65, width = 750/1.65), type = 2, color="#f88e06", color.background = "white"),
               br(),
               downloadButton(ns("downloadVolc"), 'Download Volcano plot', class = 'DLButton')
             ),
@@ -112,7 +112,7 @@ ui <- function(id) {
                 'Gene Set Enrichment Analysis'
               ),
               br(),
-              uiOutput(ns("GSEAResult_ui")),
+              shinycssloaders::withSpinner(plotOutput(ns("GSEAResult"), height = 750/2, width = 750/2), type = 2, color="#f88e06", color.background = "white"),
               br(),
               tableOutput(ns("GSEATable")),
               downloadButton(ns("downloadGSEA"), 'Download GSEA Plot', class = 'DLButton'),
@@ -158,19 +158,6 @@ server <- function(input, output, session) {
     heatmap(input$project, genelist$genes)
   })
   
-  # Make dimensions for the plot
-  plot_dimensions <- reactive({
-    list(
-      height = 750,
-      width = 750
-    )
-  })
-  
-  # Wrap in ui for dynamism
-  output$heatmapResult_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("heatmapResult"), height = plot_dimensions()$height, width = plot_dimensions()$width), type = 2, color="#f88e06", color.background = "white")
-  })
-  
   # Render fold change table
   output$heatmapTable <- renderTable({
     req(genelist$genes)
@@ -200,11 +187,6 @@ server <- function(input, output, session) {
     volcanoPlot(input$project, genelist$genes)
   })
   
-  # Wrap
-  output$volcanoResult_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("volcanoResult"), height = plot_dimensions()$height/1.65, width = plot_dimensions()$width/1.65), type = 2, color="#f88e06", color.background = "white")
-  })
-  
   # Generate the volcano plot
   output$GSEAResult <- renderPlot({
     req(genelist$genes)
@@ -212,11 +194,6 @@ server <- function(input, output, session) {
     genelist$GSEAtableResult <- GSEAresultList[['table_gsea']]
     genelist$GSEAplotResult <- GSEAresultList[['plot_GSEA']]
     GSEAresultList[['plot_GSEA']]
-  })
-  
-  # Wrap
-  output$GSEAResult_ui <- renderUI({
-    shinycssloaders::withSpinner(plotOutput(session$ns("GSEAResult"), height = plot_dimensions()$height/2, width = plot_dimensions()$width/2), type = 2, color="#f88e06", color.background = "white")
   })
   
   # Render GSEA table
@@ -259,7 +236,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       # Save the image
-      ggsave(file, plot = volcanoPlot(input$project, genelist$genes), height = (plot_dimensions()$height/1.6)*10, width = (plot_dimensions()$width/1.6)*10, dpi = 650, units = "px")
+      ggsave(file, plot = volcanoPlot(input$project, genelist$genes), height = (750/1.6)*10, width = (750/1.6)*10, dpi = 650, units = "px")
     }
   )
   
@@ -269,7 +246,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       # Save the image
-      ggsave(file, plot = genelist$GSEAplotResult, height = (plot_dimensions()$height/2)*10, width = (plot_dimensions()$width/2)*10, dpi = 650, units = "px")
+      ggsave(file, plot = genelist$GSEAplotResult, height = (750/2)*10, width = (750/2)*10, dpi = 650, units = "px")
     }
   )
   

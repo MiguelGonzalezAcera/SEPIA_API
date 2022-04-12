@@ -205,7 +205,7 @@ server <- function(input, output, session) {
       # plot the thing
       pSc <- preprocComparisonsInput()[['plotData']]
       
-      ggsave(file, plot = pSc, height = plot_dimensions()$height*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+      ggsave(file, plot = pSc, height = 6500, width = 6500, dpi = 650, units = "px")
     }
   )
   
@@ -218,7 +218,7 @@ server <- function(input, output, session) {
       # plot the thing
       pVd <- preprocComparisonsInput()[['vennData']]
       
-      ggsave(file, plot = pVd, height = (plot_dimensions()$height/3)*10, width = plot_dimensions()$width*10, dpi = 650, units = "px")
+      ggsave(file, plot = pVd, height = (650/3)*10, width = 6500, dpi = 650, units = "px")
     }
   )
 }
