@@ -8,6 +8,7 @@ box::use(
   . / modules / model_comparison,
   . / modules / introduction,
   . / modules / gene_groups,
+  . / modules / contact,
   . / shinyapp / entities[userBase]
 )
 
@@ -18,7 +19,8 @@ router <- make_router(
   route("gene_consult", gene_consult$ui("gene_consult")),
   route("model_consult", model_consult$ui("model_consult")),
   route("model_comparison", model_comparison$ui("model_comparison")),
-  route("gene_groups", gene_groups$ui("gene_groups"))
+  route("gene_groups", gene_groups$ui("gene_groups")),
+  route("contact", contact$ui("contact"))
 )
 
 ui <- fluidPage(
@@ -29,7 +31,8 @@ ui <- fluidPage(
     tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
     tags$li(a(href = route_link("model_consult"), "Model Consult")),
     tags$li(a(href = route_link("model_comparison"), "Model Comparison")),
-    tags$li(a(href = route_link("gene_groups"), "Gene groups"))
+    tags$li(a(href = route_link("gene_groups"), "Gene groups")),
+    tags$li(a(href = route_link("contact"), "Contact"))
   ),
   titlePanel(
     title = div(
@@ -82,6 +85,7 @@ server <- function(input, output, session) {
       callModule(model_consult$server, "model_consult")
       callModule(model_comparison$server, "model_comparison")
       callModule(gene_groups$server, "gene_groups")
+      callModule(contact$server, "contact")
     }
   })
 }
