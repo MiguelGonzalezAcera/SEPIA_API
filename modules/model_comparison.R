@@ -42,7 +42,7 @@ ui <- function(id) {
       conditionalPanel(
         condition = "output.sameprojErrorDisplay == false",
         div(
-          plotOutput(ns("comparisonPlot"), height = 650, width = 650, click = ns("gene_name")),
+          shinycssloaders::withSpinner(plotOutput(ns("comparisonPlot"), height = 650, width = 650, click = ns("gene_name")), type = 2, color="#f88e06", color.background = "white"),
           div(style='width: 650px;',
             verbatimTextOutput(ns("gene_info"))
           ),

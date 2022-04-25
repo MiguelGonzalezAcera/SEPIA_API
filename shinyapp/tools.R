@@ -534,17 +534,30 @@ heatmap <- function (project, genelist) {
   # Establish colors
   color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
 
-  # Make the heatmap
-  resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
-                          cluster_columns = FALSE,
-                          row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                          col=color, column_dend_height = unit(5, "cm"),
-                          row_dend_width = unit(2, "cm"),
-                          column_split = factor(dbDesSlice$Treatment),
-                          cluster_column_slices = FALSE,
-                          column_gap = unit(0.5, "cm"),
-                          show_column_names = FALSE
-                          )
+  # Make the heatmap (hide the names if it is too large)
+  if (length(genelist) > 30) {
+    resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
+                            cluster_columns = FALSE,
+                            show_row_names = FALSE,
+                            col=color, column_dend_height = unit(5, "cm"),
+                            row_dend_width = unit(2, "cm"),
+                            column_split = factor(dbDesSlice$Treatment),
+                            cluster_column_slices = FALSE,
+                            column_gap = unit(0.5, "cm"),
+                            show_column_names = FALSE
+    )
+  } else {
+    resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
+                            cluster_columns = FALSE,
+                            row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                            col=color, column_dend_height = unit(5, "cm"),
+                            row_dend_width = unit(2, "cm"),
+                            column_split = factor(dbDesSlice$Treatment),
+                            cluster_column_slices = FALSE,
+                            column_gap = unit(0.5, "cm"),
+                            show_column_names = FALSE
+    )
+  }
   
   # Return finished plot
   return(resultHeatmap)

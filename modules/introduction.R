@@ -33,7 +33,7 @@ ui <- function(id) {
 server <- function(input, output, session) {
   # Title string
   output$introdTitle <- renderText({
-    sprintf('A brief descriotion of the %s mouse model', names(displayNames)[match(input$project,displayNames)])
+    sprintf('A brief description of the %s mouse model', names(displayNames)[match(input$project,displayNames)])
   })
   
   # Description
