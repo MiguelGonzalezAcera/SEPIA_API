@@ -142,11 +142,32 @@ server <- function(input, output, session) {
   # Render the text for the clicking on the dots
   output$gene_info <- renderPrint({
     # With base graphics, need to tell it what the x and y variables are.
-    clicked <- nearPoints(preprocComparisonsInput()[['fullData']], input$gene_name, threshold = 10, xvar = "log2FoldChange.x", yvar = "log2FoldChange.y")[["Genes"]]
+    clickedDF <- nearPoints(preprocComparisonsInput()[['fullData']], input$gene_name, threshold = 10, xvar = "log2FoldChange.x", yvar = "log2FoldChange.y")
+    
+    # Get the quadrant of the click
+    clickedA <- all(clickedDF[['log2FoldChange.x']] >= 0)
+    clickedB <- all(clickedDF[['log2FoldChange.y']] >= 0)
+    
+    if (clickedA) {
+      if (clickedB) {
+        quadrant = 'Q2'
+      } else {
+        quadrant = 'Q4'
+      }
+    } else {
+      if (clickedB) {
+        quadrant = 'Q1'
+      } else {
+        quadrant = 'Q3'
+      }
+    }
+    
+    # Display the text structure
+    clicked <- clickedDF[['Genes']]
     if (length(clicked) == 0) {
       "Please, click one gene."
     } else {
-      sprintf("Gene: %s", clicked)
+      sprintf("%s. Gene: %s", quadrant, clicked)
     }
   })
   

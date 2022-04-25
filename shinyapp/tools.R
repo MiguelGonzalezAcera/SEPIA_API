@@ -321,10 +321,10 @@ formatExcelDL <- function(dbRNA, projectA, projectB) {
   
   # Arrange the things in a list and return
   quadrantsRNA <- list()
-  quadrantsRNA[[sprintf('%s + v %s +', projectA, projectB)]] = dbRNAPP
-  quadrantsRNA[[sprintf('%s + v %s -', projectA, projectB)]] = dbRNAPN
-  quadrantsRNA[[sprintf('%s - v %s +', projectA, projectB)]] = dbRNANP
-  quadrantsRNA[[sprintf('%s - v %s -', projectA, projectB)]] = dbRNANN
+  quadrantsRNA[[sprintf('%s v %s. Q2', projectA, projectB)]] = dbRNAPP
+  quadrantsRNA[[sprintf('%s v %s. Q4', projectA, projectB)]] = dbRNAPN
+  quadrantsRNA[[sprintf('%s v %s. Q1', projectA, projectB)]] = dbRNANP
+  quadrantsRNA[[sprintf('%s v %s. Q3', projectA, projectB)]] = dbRNANN
   
   # Return the ting
   return(quadrantsRNA)
