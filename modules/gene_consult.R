@@ -122,19 +122,27 @@ server <- function(input, output, session) {
     session,
     "project",
     choices = displayNames,
-    selected = c("AcDSS", "cDSS"),
+    selected = c(""),
     server = TRUE
   )
   
   # Preprocess the data
   preprocResultInput <- reactive({
-    req(input$genename,input$project)
-    preprocessing(input$project, input$genename)
+    req(input$genename)
+    
+    # If Project is empty, use all of 'em
+    if (length(input$project) == 0) {
+      project <- unlist(displayNames, use.names = FALSE)
+    } else {
+      project <- input$project
+    }
+    
+    preprocessing(project, input$genename)
   })
   
   # Render title of counts plot
   output$resultTitleCounts <- renderText({
-    req(input$genename,input$project)
+    req(input$genename)
     sprintf('Counts of %s in the selected models', names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == input$genename])
   })
   
@@ -153,7 +161,7 @@ server <- function(input, output, session) {
   
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
-    req(input$genename,input$project)
+    req(input$genename)
     # 'You could do it with facet_wrap' If you can tell me how to make the control of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
     ggarrange(
       plotlist = preprocResultInput()[['countsData']], 
@@ -173,13 +181,13 @@ server <- function(input, output, session) {
   
   # Render the title
   output$resultTitle <- renderText({
-    req(input$genename,input$project)
+    req(input$genename)
     sprintf('Fold change of %s in the selected models', names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == input$genename])
   })
   
   # Render fold change table
   output$FCtable <- renderTable({
-    req(input$genename,input$project)
+    req(input$genename)
     preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')]
   })
   
