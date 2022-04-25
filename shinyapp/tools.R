@@ -544,7 +544,17 @@ heatmap <- function (project, genelist) {
                             column_split = factor(dbDesSlice$Treatment),
                             cluster_column_slices = FALSE,
                             column_gap = unit(0.5, "cm"),
-                            show_column_names = FALSE
+                            show_column_names = FALSE,
+                            heatmap_legend_param = list(
+                              title = "relative expression",
+                              title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                              legend_height = unit(10, "cm"),
+                              grid_width = unit(1, "cm"),
+                              at = c(-4, -2, 0, 2, 4),
+                              labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                              title_position = "leftcenter-rot"
+                            )
+                            
     )
   } else {
     resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
@@ -555,7 +565,16 @@ heatmap <- function (project, genelist) {
                             column_split = factor(dbDesSlice$Treatment),
                             cluster_column_slices = FALSE,
                             column_gap = unit(0.5, "cm"),
-                            show_column_names = FALSE
+                            show_column_names = FALSE,
+                            heatmap_legend_param = list(
+                              title = "relative expression",
+                              title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                              legend_height = unit(10, "cm"),
+                              grid_width = unit(1, "cm"),
+                              at = c(-4, -2, 0, 2, 4),
+                              labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                              title_position = "leftcenter-rot"
+                            )
     )
   }
   
