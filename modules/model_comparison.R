@@ -43,9 +43,14 @@ ui <- function(id) {
         condition = "output.sameprojErrorDisplay == false",
         div(
           shinycssloaders::withSpinner(plotOutput(ns("comparisonPlot"), height = 650, width = 650, click = ns("gene_name")), type = 2, color="#f88e06", color.background = "white"),
-          div(style='width: 650px;',
-            verbatimTextOutput(ns("gene_info"))
+          br(),
+          div(style='width: 650px;background-color:rgba(248, 142, 6, 0.2);padding-bottom: 25px;border-style: solid;border-color:rgba(248, 142, 6, 1);',
+            br(),
+            div(style='margin-left:25px;',
+              htmlOutput(ns("gene_info"))
+            )
           ),
+          br(),
           br(),
           conditionalPanel(
             condition = "output.noteDisplay == true",
@@ -140,7 +145,7 @@ server <- function(input, output, session) {
   })
   
   # Render the text for the clicking on the dots
-  output$gene_info <- renderPrint({
+  output$gene_info <- renderText({
     # With base graphics, need to tell it what the x and y variables are.
     clickedDF <- nearPoints(preprocComparisonsInput()[['fullData']], input$gene_name, threshold = 10, xvar = "log2FoldChange.x", yvar = "log2FoldChange.y")
     
@@ -167,7 +172,7 @@ server <- function(input, output, session) {
     if (length(clicked) == 0) {
       "Please, click one gene."
     } else {
-      sprintf("%s. Gene: %s", quadrant, clicked)
+      sprintf("<b>%s</b>. Gene: %s", quadrant, clicked)
     }
   })
   
