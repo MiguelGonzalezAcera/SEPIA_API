@@ -172,7 +172,7 @@ server <- function(input, output, session) {
     if (length(clicked) == 0) {
       "Please, click one gene."
     } else {
-      sprintf("<b>%s</b>. Gene: %s", quadrant, clicked)
+      sprintf("<b>%s</b>. Gene: <u>%s</u>. ", quadrant, clicked)
     }
   })
   
