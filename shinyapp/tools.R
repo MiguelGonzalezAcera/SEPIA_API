@@ -5,6 +5,7 @@ box::use(
   stats[...],
   ggplot2[...],
   ggpubr[...],
+  ggtext[...],
   stringr[...],
   ggVennDiagram[...],
   readxl[...],
@@ -267,7 +268,7 @@ preprocessing <- function(project, genename) {
         # Create the boxplot with the extracted data
         geneBplot <- ggplot(countsDf2, aes(x=Treatment, y=Counts)) + 
           geom_boxplot() +
-          ggtitle(paste(geneID, projectName, sep = ' - '))
+          ggtitle(str_wrap(paste(geneID, projectName, sep = ' - '), 35))
         
         # Add plot to list
         countsBox[[paste(geneID, projectName, sep = '_')]] <- geneBplot
@@ -342,17 +343,19 @@ vennComparison <- function(dbA, dbB, pNames) {
   
   #Sets of information
   vUpreg <- list()
-  vUpreg[[pNames[1]]] <- dbAUfilt[['Genes']]
-  vUpreg[[pNames[2]]] <- dbBUfilt[['Genes']]
-  
+  vUpreg[[str_wrap(pNames[1], 20)]] <- dbAUfilt[['Genes']]
+  vUpreg[[str_wrap(pNames[2], 20)]] <- dbBUfilt[['Genes']]
+
   # Upreg plot
   upVenn <- ggVennDiagram(
     vUpreg,
+    set_size = 4,
     edge_size = 0.1,
     edge_color = 'black'
   ) +
     ggtitle('Upregulated genes') +
-    scale_fill_gradient(limits = c(0,NA),low="white",high = "red")
+    scale_fill_gradient(limits = c(0,NA),low="white",high = "red") + 
+    scale_y_continuous(expand = expansion(mult = .2))
 
   # downreg
   dbADfilt <- dbA[dbA$log2FoldChange <= 0,]
@@ -360,17 +363,19 @@ vennComparison <- function(dbA, dbB, pNames) {
   
   #Sets of information
   vDownreg <- list()
-  vDownreg[[pNames[1]]] <- dbADfilt[['Genes']]
-  vDownreg[[pNames[2]]] <- dbBDfilt[['Genes']]
+  vDownreg[[str_wrap(pNames[1], 20)]] <- dbADfilt[['Genes']]
+  vDownreg[[str_wrap(pNames[2], 20)]] <- dbBDfilt[['Genes']]
   
   # downreg plot
   downVenn <- ggVennDiagram(
     vDownreg,
+    set_size = 4,
     edge_size = 0.1,
     edge_color = 'black'
   ) +
     ggtitle('Downregulated genes') +
-    scale_fill_gradient(limits = c(0,NA),low="white",high = "red")
+    scale_fill_gradient(limits = c(0,NA),low="white",high = "red") + 
+    scale_y_continuous(expand = expansion(mult = .2))
   
   #Make the list
   resultVenn <- ggarrange(upVenn, downVenn, ncol = 2)
