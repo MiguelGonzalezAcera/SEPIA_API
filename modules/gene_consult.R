@@ -44,7 +44,7 @@ ui <- function(id) {
         ),
         div(
           class = 'ToolDesc',
-          'Explore the behaviour of a gene across multiple mouse IBD models.'
+          'Explore the behaviour of a gene across multiple mouse IBD models. If no models are chosen, all models shall be displayed.'
         )
       ),
       
@@ -122,7 +122,7 @@ server <- function(input, output, session) {
     session,
     "project",
     choices = displayNames,
-    selected = c(""),
+    selected = c("AcDSS", "cDSS"),
     server = TRUE
   )
   
