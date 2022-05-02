@@ -53,7 +53,7 @@ ui <- fluidPage(
   # Last break and bottom banner
   div(
     class = 'footer',
-    br()
+    textOutput("gitVers"),
   )
 )
 
@@ -74,6 +74,11 @@ server <- function(input, output, session) {
     id = "logout",
     active = reactive(credentials()$user_auth)
   )
+  
+  output$gitVers <- renderText({
+    tagVers <- names(git2r::tags(repo = "."))[length(names(git2r::tags(repo = ".")))]
+    sprintf('Version: %s', tagVers)
+  })
   
   observeEvent(credentials()$user_auth, {
     # if user logs in successfully

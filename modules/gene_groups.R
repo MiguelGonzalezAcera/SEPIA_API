@@ -32,15 +32,29 @@ ui <- function(id) {
       fileInput(ns('genelist_upload'), 'Upload gene set:', accept = c('.txt','.xlsx')),
       
       # Add short description of the tool
-      br(),
       div(
         div(
           class = 'SmallTitleText',
           'Tool description:'
         ),
+        br(),
         div(
           class = 'ToolDesc',
-          'Explore a group of genes in one of the models.'
+          'Explore a group of genes in one of the models.',
+          br(),
+          'You can upload your chosen mouse genes in a txt file, with each gene name in a line.',
+          br(),
+          'Example:',
+          br(),
+          br(),
+          'Brca1',
+          br(),
+          'Brca2',
+          br(),
+          'Pkd1',
+          br(),
+          br(),
+          'You can also upload an excel file with only one sheet and your genes in a single column.'
         )
       ),
       
