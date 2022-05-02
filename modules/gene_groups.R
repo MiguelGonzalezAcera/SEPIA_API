@@ -1,5 +1,6 @@
 box::use(
   shiny[...],
+  shinyFeedback[...],
   ggplot2[...],
   ggpubr[...],
   ComplexHeatmap[...],
@@ -20,6 +21,9 @@ ui <- function(id) {
   theme = "main.css"
   
   div(
+    # Explicitely state we want to use the feedback for this
+    useShinyFeedback(),
+    
     # Application title
     headerPanel("Gene set behaviour"),
     
@@ -154,6 +158,25 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$genelist_upload,{
+    # give feedback on the upload
+    if (endsWith(input$genelist_upload$datapath, '.txt') | endsWith(input$genelist_upload$datapath, '.xlsx')) {
+      showFeedbackSuccess(
+        inputId = "genelist_upload",
+        text = "Genelist uploaded successfully."
+      )
+    } else {
+      showFeedbackDanger(
+        inputId = "genelist_upload",
+        text = "Wrong file format!"
+      )
+    }
+  })
+  
+  observeEvent(input$genelist_upload,{
+    # Check if the extension is the one
+    extUpl <- endsWith(input$genelist_upload$datapath, '.txt') | endsWith(input$genelist_upload$datapath, '.xlsx')
+    req(extUpl, cancelOutput = TRUE)
+    
     genelist$genes <- readGenelist(input$genelist_upload$datapath)
     genelist$title <- 'Behaviour of the uploaded gene list'
     genelist$errormess <- 'The genes from the uploaded gene list are unavailable in the selected project'
