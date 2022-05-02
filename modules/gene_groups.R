@@ -58,7 +58,10 @@ ui <- function(id) {
           'Pkd1',
           br(),
           br(),
-          'You can also upload an excel file with only one sheet and your genes in a single column.'
+          'You can also upload an excel file with only one sheet and your genes in a single column.',
+          br(),
+          br(),
+          HTML('<b>NOTE</b>: Be sure that the genes are written according to official mouse gene notation (lowercase with capital first letter)')
         )
       ),
       
@@ -176,6 +179,16 @@ server <- function(input, output, session) {
     # Check if the extension is the one
     extUpl <- endsWith(input$genelist_upload$datapath, '.txt') | endsWith(input$genelist_upload$datapath, '.xlsx')
     req(extUpl, cancelOutput = TRUE)
+    
+    # check if the uploaded thing has any genes in the mouse gene record
+    extGenes <- length(readGenelist(input$genelist_upload$datapath)) > 0
+    if (!extGenes) {
+      showFeedbackDanger(
+        inputId = "genelist_upload",
+        text = "File contents are not gene names."
+      )
+    }
+    req(extGenes, cancelOutput = TRUE)
     
     genelist$genes <- readGenelist(input$genelist_upload$datapath)
     genelist$title <- 'Behaviour of the uploaded gene list'
