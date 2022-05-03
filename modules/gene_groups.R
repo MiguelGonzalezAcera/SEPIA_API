@@ -61,7 +61,7 @@ ui <- function(id) {
           'You can also upload an excel file with only one sheet and your genes in a single column.',
           br(),
           br(),
-          HTML('<b>NOTE</b>: Be sure that the genes are written according to official mouse gene notation (lowercase with capital first letter)')
+          HTML('<b>NOTE</b>: Be sure that the genes are written according to official mouse gene notation (lowercase with capital first letter). Max number of genes: 400')
         )
       ),
       
@@ -192,6 +192,19 @@ server <- function(input, output, session) {
       showFeedbackDanger(
         inputId = "genelist_upload",
         text = "File contents are not gene names."
+      )
+    }
+    req(extGenes, cancelOutput = TRUE)
+    
+    # check if the uploaded thing is too long
+    extGenesLen <- length(readGenelist(input$genelist_upload$datapath)) < 400
+    if (!extGenes) {
+      # Hide existing feedback
+      hideFeedback("genelist_upload")
+      
+      showFeedbackDanger(
+        inputId = "genelist_upload",
+        text = "Gene list is too long."
       )
     }
     req(extGenes, cancelOutput = TRUE)
