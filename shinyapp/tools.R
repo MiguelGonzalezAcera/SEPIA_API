@@ -488,7 +488,7 @@ readGenelist <- function(filepath) {
     genelist <- scan(filepath, character())
   } else if (endsWith(filepath, '.xlsx')) {
     # Read excel file
-    genelist <- as.data.frame(read_excel(filename, col_names=FALSE))[,1]
+    genelist <- as.data.frame(read_excel(filepath, col_names=FALSE))[,1]
   }
   
   # Translate the gene names into ensembl ids
