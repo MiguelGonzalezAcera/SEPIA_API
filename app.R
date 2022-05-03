@@ -76,7 +76,8 @@ server <- function(input, output, session) {
   )
   
   output$gitVers <- renderText({
-    tagVers <- names(git2r::tags(repo = "."))[length(names(git2r::tags(repo = ".")))]
+    sortedTagList <- git2r::tags(repo = '.')[order(names(git2r::tags(repo = ".")))]
+    tagVers <- names(sortedTagList)[length(sortedTagList)]
     sprintf('Version: %s', tagVers)
   })
   
