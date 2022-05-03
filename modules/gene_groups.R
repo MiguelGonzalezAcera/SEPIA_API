@@ -161,6 +161,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$genelist_upload,{
+    # Hide existing feedback
+    hideFeedback("genelist_upload")
+    
     # give feedback on the upload
     if (endsWith(input$genelist_upload$datapath, '.txt') | endsWith(input$genelist_upload$datapath, '.xlsx')) {
       showFeedbackSuccess(
@@ -183,6 +186,9 @@ server <- function(input, output, session) {
     # check if the uploaded thing has any genes in the mouse gene record
     extGenes <- length(readGenelist(input$genelist_upload$datapath)) > 0
     if (!extGenes) {
+      # Hide existing feedback
+      hideFeedback("genelist_upload")
+      
       showFeedbackDanger(
         inputId = "genelist_upload",
         text = "File contents are not gene names."
