@@ -189,7 +189,7 @@ server <- function(input, output, session) {
   output$FCtable <- renderTable({
     req(input$genename)
     preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')]
-  })
+  }, digits = 5)
   
   # Render informative note about the gene selection
   output$fctableNote <- renderText({
