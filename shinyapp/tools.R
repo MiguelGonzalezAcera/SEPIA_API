@@ -42,16 +42,9 @@ geneLabels <- function(){
   mouse_genelist <- as.list(dbRefCol[['EnsGenes']])
   names(mouse_genelist) <- as.vector(dbRefCol[['Genes']])
   
-  # Make it so capital letters go first in the sorting
-  Sys.setlocale("LC_COLLATE","C")
-  
-  # Sort with the numbers last
-  namesNum <- sort(names(mouse_genelist)[grepl("^[[:digit:]]+", names(mouse_genelist))])
-  namesChr <- sort(names(mouse_genelist)[!grepl("^[[:digit:]]+", names(mouse_genelist))])
-  
   # return List of genes with a name
   geneLabelsList <- list(
-    'mouse_genes' = mouse_genelist[c(namesChr,namesNum)]
+    'mouse_genes' = mouse_genelist
   )
 
   return(geneLabelsList)
