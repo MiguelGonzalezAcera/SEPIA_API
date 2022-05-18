@@ -166,7 +166,7 @@ server <- function(input, output, session) {
   output$FCtable <- renderTable({
     req(input$genename,input$project)
     preprocResultInput()[['foldChangeData']][c('ModelName','Genes','log2FoldChange','pvalue','padj')]
-  })
+  }, digits = 5)
   
   # Check if it has to display the plots
   output$plotDisplay <- reactive({

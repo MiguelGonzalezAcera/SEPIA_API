@@ -231,7 +231,7 @@ server <- function(input, output, session) {
   output$heatmapTable <- renderTable({
     req(genelist$genes)
     queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
-  })
+  }, digits = 5)
   
   # Render informative note about the gene selection
   output$fctableNote <- renderText({
@@ -269,7 +269,7 @@ server <- function(input, output, session) {
   output$GSEATable <- renderTable({
     req(genelist$genes, genelist$GSEAtableResult)
     genelist$GSEAtableResult[c('Description','enrichmentScore', 'pvalue', 'p.adjust')]
-  })
+  }, digits = 5)
   
   # Render error message
   # Render informative note about the gene selection
@@ -294,6 +294,8 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap.png'), collapse = "_")
     },
     content = function(file) {
+      grDevices::pdf(NULL)
+      
       # Save the image
       ggsave(file, plot = grid.grabExpr(draw(heatmap(input$project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
     }
