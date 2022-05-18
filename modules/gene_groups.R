@@ -275,6 +275,8 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap.png'), collapse = "_")
     },
     content = function(file) {
+      grDevices::pdf(NULL)
+      
       # Save the image
       ggsave(file, plot = grid.grabExpr(draw(heatmap(input$project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
     }
