@@ -157,7 +157,7 @@ server <- function(input, output, session) {
     genelist$genes <- getMarkerlist(input$genelist_markers)
     genelist$title <- sprintf('Behaviour of the gene markers for %s', names(markerNames)[match(input$genelist_markers,markerNames)])
     genelist$errormess <- sprintf('The genes from the %s gene list are unavailable in the selected project', names(markerNames)[match(input$genelist_markers,markerNames)])
-    genelist$handle <- input$genelist_markers
+    genelist$handle <- names(markerNames)[match(input$genelist_markers,markerNames)]
   })
   
   observeEvent(input$genelist_upload,{
@@ -212,7 +212,7 @@ server <- function(input, output, session) {
     genelist$genes <- readGenelist(input$genelist_upload$datapath)
     genelist$title <- 'Behaviour of the uploaded gene list'
     genelist$errormess <- 'The genes from the uploaded gene list are unavailable in the selected project'
-    genelist$handle < 'Uploaded gene list'
+    genelist$handle <- 'Uploaded gene list'
   })
   
   # Render title of counts plot
