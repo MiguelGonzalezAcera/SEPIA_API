@@ -4,7 +4,7 @@ box::use(
   ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames]
+  .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames,imgFormat]
 )
 
 #' @export
@@ -26,6 +26,9 @@ ui <- function(id) {
         multiple = TRUE,
         width = "100%"
       ),
+      
+      # Select image format
+      selectInput(ns("fformat"), "Image download format:", imgFormat),
       
       # Add short description of the tool
       br(),
@@ -204,7 +207,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot',input$fformat), collapse = "_")
     },
     content = function(file) {
       # plot the thing

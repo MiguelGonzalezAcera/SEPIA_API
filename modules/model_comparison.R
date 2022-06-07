@@ -4,7 +4,7 @@ box::use(
   ggpubr[...],
   openxlsx[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[imgLabels,displayNames]
+  .. / shinyapp / entities[imgLabels,displayNames,imgFormat]
 )
 
 #' @export
@@ -26,6 +26,9 @@ ui <- function(id) {
         multiple = TRUE,
         width = "100%"
       ),
+      
+      # Select image format
+      selectInput(ns("fformat"), "Image download format:", imgFormat),
 
       #submitButton("Update View"),
       
@@ -225,7 +228,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadSCPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'scatter.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'scatter',input$fformat), collapse = "_")
     },
     content = function(file) {
       # plot the thing
@@ -238,7 +241,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadVennPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'venn.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'venn',input$fformat), collapse = "_")
     },
     content = function(file) {
       # plot the thing

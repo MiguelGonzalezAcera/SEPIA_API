@@ -11,7 +11,7 @@ box::use(
   openxlsx[...],
   grid[...],
   .. / shinyapp / tools[...],
-  .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames,markerNames]
+  .. / shinyapp / entities[fullExp,singleExp,imgLabels,displayNames,markerNames,imgFormat]
 )
 
 #' @export
@@ -34,6 +34,9 @@ ui <- function(id) {
       
       # Upload data
       fileInput(ns('genelist_upload'), 'Upload gene set:', accept = c('.txt','.xlsx')),
+      
+      # Select image format
+      selectInput(ns("fformat"), "Image download format:", imgFormat),
       
       # Add short description of the tool
       div(
@@ -291,7 +294,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as png in proper resolution
   output$downloadHmap <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap',input$fformat), collapse = "_")
     },
     content = function(file) {
       grDevices::pdf(NULL)
@@ -303,7 +306,7 @@ server <- function(input, output, session) {
   
   output$downloadVolc <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'Volcano.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'Volcano',input$fformat), collapse = "_")
     },
     content = function(file) {
       # Save the image
@@ -313,7 +316,7 @@ server <- function(input, output, session) {
   
   output$downloadGSEA <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA.png'), collapse = "_")
+      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA',input$fformat), collapse = "_")
     },
     content = function(file) {
       # Save the image
