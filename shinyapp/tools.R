@@ -254,6 +254,10 @@ preprocessing <- function(project, genename) {
 
     # Loop throught the genes
     for (gene in genename) {
+      # Get the flag of the gene
+      flagResult <- queryExperiment(singleExp[[proj]][['tabid']], gene)[['FLAG']]
+      pvalue <- queryExperiment(singleExp[[proj]][['tabid']], gene)[['padj']]
+
       # Get the counts data
       countsDf <- preprocCountsDataSingle(singleExp[[proj]][['tabid']], dbDesRows, dbProjRows, gene)
 
@@ -265,10 +269,24 @@ preprocessing <- function(project, genename) {
         # Transform the name of the gene from ensemblidinto geneid
         geneID <- names(geneLabels()$mouse_genes)[geneLabels()$mouse_genes == gene]
         
+        # Select background color
+        if (flagResult != 'OK') {
+          bgColor <- '#F0EED4'
+        } else if (pvalue < 0.05) {
+          bgColor <- '#D5F0D4'
+        } else {
+          bgColor <- 'white'
+        }
+        
         # Create the boxplot with the extracted data
         geneBplot <- ggplot(countsDf2, aes(x=Treatment, y=Counts)) + 
           geom_boxplot() +
-          ggtitle(str_wrap(paste(geneID, projectName, sep = ' - '), 35))
+          ggtitle(str_wrap(paste(geneID, projectName, sep = ' - '), 35)) +
+          theme(
+            panel.background = element_rect(fill = bgColor,
+                                            colour = bgColor,
+                                            size = 0.5, linetype = "solid")
+          )
         
         # Add plot to list
         countsBox[[paste(geneID, projectName, sep = '_')]] <- geneBplot
