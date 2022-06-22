@@ -81,17 +81,6 @@ ui <- function(id) {
           br(),
           tableOutput(ns("FCtable")),
           br(),
-          div(
-            class = 'fcTableNoteFrame',
-            div(
-              class = 'NoteFrame',
-              div(
-                class = 'NoteContent',
-                htmlOutput(ns('fctableNote'))
-              )
-            )
-          ),
-          br(),
           downloadButton(ns("downloadData"), 'Download Table', class = 'DLButton'),
           downloadButton(ns("downloadPlot"), 'Download Graphic', class = 'DLButton')
         ),
@@ -181,13 +170,7 @@ server <- function(input, output, session) {
   output$errorTable <- renderTable({
     preprocResultInput()[['errorData']]
   })
-  
-  # Render informative note about the gene selection
-  output$fctableNote <- renderText({
-    req(input$genename)
-    '<b>NOTE:</b> Because there are different models being displayed, the statistical indicator to consider is the <b>P adjusted value</b>, not the P value.'
-  })
-  
+
   # Check if it has to display the error box
   output$errorDispl <- reactive({
     preprocResultInput()[['errDispl']]
