@@ -518,89 +518,255 @@ readGenelist <- function(filepath) {
 
 #' @export
 heatmap <- function (project, genelist) {
-  # Query the data with the obtained gene list
-  genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
-  
-  # Get data from the project design
-  dbDesRows <- designPreproc(singleExp[[project]][['project']])
-  
-  # Get data from the project design
-  dbProjRows <- projectPreproc(singleExp[[project]][['project']])
-  
-  # Select the row with our project
-  dbProjRows <- dbProjRows[dbProjRows$Comparison == singleExp[[project]][['tabid']],]
-  
-  # Subset design and get length of control
-  dbDesSlice <- dbDesRows[dbDesRows$Treatment == dbProjRows[['Control']] | dbDesRows$Treatment == dbProjRows[['Sample']],]
-  # Transform the treatment column into a factor with the control first
-  dbDesSlice$Treatment <- factor(dbDesSlice$Treatment, levels = c(dbProjRows[['Control']], dbProjRows[['Sample']]))
-  # Sort by the factor levels to get the control always on the left of the heatmap
-  dbDesSlice <- dbDesSlice[order(dbDesSlice$Treatment),]
+  # check if the length of the project list is 1 or more
+  if (length(project) > 1) {
+    clust_df <- NULL
+    pval_df <- NULL
+    for (tabname in project){
+      # Establish the connection to the database
+      genelistDF <- queryExperiment(singleExp[[tabname]][['tabid']], genelist)
+      
+      # Filter flagged genes
+      genelistDF <- subset(genelistDF, genelistDF$FLAG == "OK")
+      
+      # Put ensembl as row names
+      rownames(genelistDF) <- genelistDF$EnsGenes
+      
+      # Sort the names by rowname (ENSEMBLID)
+      genelistDF <- genelistDF[order(row.names(genelistDF)),]
+      
+      # Get the fold change and the pvalue column
+      FC_df <- genelistDF["log2FoldChange"]
+      #pv_df <- full_df["padj_fix"]
+      pv_df <- genelistDF["padj"]
+      
+      # Name the column as the file
+      colnames(FC_df) <- c(tabname)
+      colnames(pv_df) <- c(tabname)
+      
+      if (is.null(clust_df) == T){
+        # If the final df is empty, fill it with one column
+        clust_df <- FC_df
+        pval_df <- pv_df
+      } else {
+        # If not, add the column to the df
+        clust_df <- merge(clust_df, FC_df, by=0,all=T)
+        rownames(clust_df) <- clust_df$Row.names
+        clust_df$Row.names <- NULL
+        
+        pval_df <- merge(pval_df, pv_df, by=0,all=T)
+        rownames(pval_df) <- pval_df$Row.names
+        pval_df$Row.names <- NULL
+      }
+    }
+    # Replace NA values
+    clust_df[is.na(clust_df)] <- 0
+    pval_df[is.na(pval_df)] <- 1
+    
+    # Keep only genes with valid pvalues
+    clust_df <- clust_df[rownames(clust_df) %in% rownames(pval_df), ,drop=FALSE]
+    
+    # cluster the dataframe and get the order of files
+    hr <- hclust(as.dist(1-cor(t(data.matrix(clust_df)), method="pearson")), method="average")
+    gene_order <- hr$labels[hr$order]
+    
+    # Reorder dataframes according to the new order
+    clust_df['Row.names'] <- rownames(clust_df)
+    clust_df <- clust_df[match(gene_order,clust_df$Row.names),]
+    clust_df$Row.names <- NULL
+    
+    pval_df['Row.names'] <- rownames(pval_df)
+    pval_df <- pval_df[match(gene_order,pval_df$Row.names),]
+    pval_df$Row.names <- NULL
+    
+    # Create object of result
+    circle_df <- NULL
+    modelNames <- c()
+    # Iter through the columns to create the proper object
+    for (column in colnames(clust_df)) {
+      # Element1: Gene names
+      genes_list <- rownames(clust_df[column])
+      
+      #Element2: Fold changes
+      FC_list <- clust_df[[column]]
+      
+      #Element3: log10 pvals
+      pv_list <- pval_df[[column]]
+      
+      #Element4: names of genes.
+      genenames_list <- names(geneLabels()$mouse_genes[geneLabels()$mouse_genes %in% genes_list][order(match(geneLabels()$mouse_genes[geneLabels()$mouse_genes %in% genes_list],gene_order))])
+      
+      # Create data frame
+      wdf <- data.frame(
+        EnsGenes = genes_list,
+        Genes = genenames_list,
+        FoldChange = FC_list,
+        pval = pv_list
+      )
+      
+      # Element5: Table name
+      wdf['model'] <- names(displayNames)[displayNames == column]
+      
+      # Add display name to model names
+      modelNames <- c(modelNames, names(displayNames)[displayNames == column])
+      
+      if (is.null(circle_df) == T){
+        circle_df <- wdf
+      } else {
+        circle_df <- rbind(circle_df, wdf)
+      }
+    }
+    
+    # Get model column and gene column as factor to avoid releveling
+    circle_df$model <- factor(circle_df$model, levels = modelNames)
+    circle_df$Genes <- factor(circle_df$Genes, levels = genenames_list)
+    
+    # Define limits of the scale
+    limitEdges <- c(min(min(circle_df$FoldChange),-2),max(max(circle_df$FoldChange),2))
+    
+    # Define the scaling of the colors (Lord help me)
+    colorscale <- c('blue','white','red')
+    
+    # Get the values for the color scale maximums
+    minblue = (-2-limitEdges[1])/(limitEdges[2]-limitEdges[1])
+    zerowhite = (0-limitEdges[1])/(limitEdges[2]-limitEdges[1])
+    maxred = (2-limitEdges[1])/(limitEdges[2]-limitEdges[1])
+    
+    valuescale <- c(minblue,zerowhite,maxred)
+    
+    # Set additional values if necessary
+    if (minblue > 0) {
+      colorscale <- c('blue',colorscale)
+      valuescale <- c(0, valuescale)
+    }
+    
+    if (maxred < 1) {
+      colorscale <- c(colorscale, 'red')
+      valuescale <- c(valuescale, 1)
+    }
+    
+    # Determine maximum value of radius
+    radius <- max(5, 30 - min(15,if (length(levels(circle_df$model)) < 5) {0} else {1.5*length(levels(circle_df$model))}) - min(10,if (length(levels(as.factor(circle_df$EnsGenes))) < 15) {0} else {1.5*length(levels(as.factor(circle_df$EnsGenes)))}))
 
-  # Change unknown gene names to something more fitting for the heatmap calculations
-  rows_hm <- as.character(genelistDF$Genes)
-  
-  rows_hm[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA'] <- as.character(genelistDF$EnsGenes)[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA']
-  rownames(genelistDF) <- rows_hm
-
-  # Select the columns only with the counts for the heatmap
-  genelistDF <- genelistDF[-which(names(genelistDF) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
-  
-  # Cluster the rows of the data frame. Insert into a trycatch in case some thing odd happens
-  hr = tryCatch({
-    as.dendrogram(hclust(as.dist(1-cor(t(data.matrix(genelistDF)),
-                                       method="pearson")), method="complete"))
-  }, error = function(e) {
-    FALSE
-  })
-  
-  # Establish colors
-  color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
-
-  # Make the heatmap (hide the names if it is too large)
-  if (length(genelist) > 30) {
-    resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
-                            cluster_columns = FALSE,
-                            show_row_names = FALSE,
-                            col=color, column_dend_height = unit(5, "cm"),
-                            row_dend_width = unit(2, "cm"),
-                            column_split = factor(dbDesSlice$Treatment),
-                            cluster_column_slices = FALSE,
-                            column_gap = unit(0.5, "cm"),
-                            show_column_names = FALSE,
-                            heatmap_legend_param = list(
-                              title = "relative expression",
-                              title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                              legend_height = unit(10, "cm"),
-                              grid_width = unit(1, "cm"),
-                              at = c(-4, -2, 0, 2, 4),
-                              labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                              title_position = "leftcenter-rot"
-                            )
-                            
-    )
+    # Make the plot. Got it from https://stackoverflow.com/questions/67746044/r-heatmap-with-circles
+    resultHeatmap <- ggplot(circle_df, aes(model, Genes, fill = FoldChange, size = pval)) +
+      geom_point(shape = 21, stroke = 0) +
+      geom_hline(yintercept = seq(.5, length(levels(circle_df$Genes)) + 0.5, 1), size = .1, colour = "#F88E06") +
+      geom_vline(xintercept = seq(.5, length(levels(circle_df$model)) + 0.5, 1), size = .1, colour = "#F88E06") +
+      scale_x_discrete(position = "bottom") +
+      scale_radius(limits = c(0, 0.2), breaks = c(0, 0.05, 0.1, 0.15), range = c(radius, 0)) +
+      scale_fill_gradientn(colours = colorscale, values = valuescale, breaks = c(-4, -2, 0, 2, 4), labels = c('-4', "-2", "0", "2", '4'), limit = limitEdges) +
+      theme_minimal()
+    
+    # check if genelist is too long
+    if (length(genelist) > 30) {
+      resultHeatmap <- resultHeatmap + theme(legend.position = "bottom", 
+                                             panel.grid.major = element_blank(),
+                                             axis.text.y=element_blank(),
+                                             text = element_text(size = 25),
+                                             axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                             legend.text = element_text(size = 10),
+                                             legend.title = element_text(size = 10))
+    } else {
+      resultHeatmap <- resultHeatmap + theme(legend.position = "bottom", 
+                                             panel.grid.major = element_blank(),
+                                             text = element_text(size = 25),
+                                             axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                             legend.text = element_text(size = 10),
+                                             legend.title = element_text(size = 10))
+    }
+    
+    # Add the rest of the parameters
+    resultHeatmap <- resultHeatmap + guides(size = guide_legend(override.aes = list(fill = NA, color = "black", stroke = .25), 
+                                                                label.position = "bottom",
+                                                                title.position = "right", 
+                                                                order = 1),
+                                            fill = guide_colorbar(ticks.colour = NA, title.position = "top", order = 2)) +
+                                      labs(size = "Area = P value", fill = "Fold Change:", x = NULL, y = NULL)
   } else {
-    resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
-                            cluster_columns = FALSE,
-                            row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                            col=color, column_dend_height = unit(5, "cm"),
-                            row_dend_width = unit(2, "cm"),
-                            column_split = factor(dbDesSlice$Treatment),
-                            cluster_column_slices = FALSE,
-                            column_gap = unit(0.5, "cm"),
-                            show_column_names = FALSE,
-                            heatmap_legend_param = list(
-                              title = "relative expression",
-                              title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                              legend_height = unit(10, "cm"),
-                              grid_width = unit(1, "cm"),
-                              at = c(-4, -2, 0, 2, 4),
-                              labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
-                              title_position = "leftcenter-rot"
-                            )
-    )
-  }
+    # Query the data with the obtained gene list
+    genelistDF <- queryExperiment(singleExp[[project]][['tabid']], genelist)
+    
+    # Get data from the project design
+    dbDesRows <- designPreproc(singleExp[[project]][['project']])
+    
+    # Get data from the project design
+    dbProjRows <- projectPreproc(singleExp[[project]][['project']])
+    
+    # Select the row with our project
+    dbProjRows <- dbProjRows[dbProjRows$Comparison == singleExp[[project]][['tabid']],]
+    
+    # Subset design and get length of control
+    dbDesSlice <- dbDesRows[dbDesRows$Treatment == dbProjRows[['Control']] | dbDesRows$Treatment == dbProjRows[['Sample']],]
+    # Transform the treatment column into a factor with the control first
+    dbDesSlice$Treatment <- factor(dbDesSlice$Treatment, levels = c(dbProjRows[['Control']], dbProjRows[['Sample']]))
+    # Sort by the factor levels to get the control always on the left of the heatmap
+    dbDesSlice <- dbDesSlice[order(dbDesSlice$Treatment),]
   
+    # Change unknown gene names to something more fitting for the heatmap calculations
+    rows_hm <- as.character(genelistDF$Genes)
+    
+    rows_hm[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA'] <- as.character(genelistDF$EnsGenes)[is.na(rows_hm)|duplicated(rows_hm)|rows_hm == 'NA']
+    rownames(genelistDF) <- rows_hm
+  
+    # Select the columns only with the counts for the heatmap
+    genelistDF <- genelistDF[-which(names(genelistDF) %in% c('id','EnsGenes','baseMean','log2FoldChange','lfcSE','stat','pvalue','padj','Genes','FLAG'))]
+    
+    # Cluster the rows of the data frame. Insert into a trycatch in case some thing odd happens
+    hr = tryCatch({
+      as.dendrogram(hclust(as.dist(1-cor(t(data.matrix(genelistDF)),
+                                         method="pearson")), method="complete"))
+    }, error = function(e) {
+      FALSE
+    })
+    
+    # Establish colors
+    color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
+  
+    # Make the heatmap (hide the names if it is too large)
+    if (length(genelist) > 30) {
+      resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
+                              cluster_columns = FALSE,
+                              show_row_names = FALSE,
+                              col=color, column_dend_height = unit(5, "cm"),
+                              row_dend_width = unit(2, "cm"),
+                              column_split = factor(dbDesSlice$Treatment),
+                              cluster_column_slices = FALSE,
+                              column_gap = unit(0.5, "cm"),
+                              show_column_names = FALSE,
+                              heatmap_legend_param = list(
+                                title = "relative expression",
+                                title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                                legend_height = unit(10, "cm"),
+                                grid_width = unit(1, "cm"),
+                                at = c(-4, -2, 0, 2, 4),
+                                labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                                title_position = "leftcenter-rot"
+                              )
+                              
+      )
+    } else {
+      resultHeatmap <-Heatmap(t(scale(t(log(data.matrix(genelistDF) + 1)))), cluster_rows = hr,
+                              cluster_columns = FALSE,
+                              row_names_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                              col=color, column_dend_height = unit(5, "cm"),
+                              row_dend_width = unit(2, "cm"),
+                              column_split = factor(dbDesSlice$Treatment),
+                              cluster_column_slices = FALSE,
+                              column_gap = unit(0.5, "cm"),
+                              show_column_names = FALSE,
+                              heatmap_legend_param = list(
+                                title = "relative expression",
+                                title_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                                legend_height = unit(10, "cm"),
+                                grid_width = unit(1, "cm"),
+                                at = c(-4, -2, 0, 2, 4),
+                                labels_gp = gpar(fontsize = (90/length(rows_hm)+5)),
+                                title_position = "leftcenter-rot"
+                              )
+      )
+    }
+  }
   # Return finished plot
   return(resultHeatmap)
 }

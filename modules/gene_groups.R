@@ -29,7 +29,14 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
-      selectInput(ns("project"), "Project:", displayNames),
+      selectizeInput(
+        ns("project"),
+        label = "Project:",
+        choices = NULL,
+        multiple = TRUE,
+        width = "100%"
+      ),
+      
       selectInput(ns("genelist_markers"), "Available markers:", markerNames),
       
       # Upload data
@@ -117,31 +124,35 @@ ui <- function(id) {
           br(),
           br(),
           br(),
-          div(style='display: flex;',
-            div(
-              style='margin-left: 60px;',
+          conditionalPanel(
+            condition = 'output.plotsDisplay == true',
+            div(style='display: flex;',
               div(
-                class = 'SmallTitleText',
-                'Volcano plot'
+                style='margin-left: 60px;',
+                div(
+                  class = 'SmallTitleText',
+                  'Volcano plot'
+                ),
+                br(),
+                shinycssloaders::withSpinner(plotOutput(ns("volcanoResult"), height = 750/1.65, width = 750/1.65), type = 2, color="#f88e06", color.background = "white"),
+                br(),
+                downloadButton(ns("downloadVolc"), 'Download Volcano plot', class = 'DLButton')
               ),
-              br(),
-              shinycssloaders::withSpinner(plotOutput(ns("volcanoResult"), height = 750/1.65, width = 750/1.65), type = 2, color="#f88e06", color.background = "white"),
-              br(),
-              downloadButton(ns("downloadVolc"), 'Download Volcano plot', class = 'DLButton')
+              div(
+                style='margin-left: 60px;',
+                div(
+                  class = 'SmallTitleText',
+                  'Gene Set Enrichment Analysis'
+                ),
+                br(),
+                shinycssloaders::withSpinner(plotOutput(ns("GSEAResult"), height = 750/2, width = 750/2), type = 2, color="#f88e06", color.background = "white"),
+                br(),
+                tableOutput(ns("GSEATable")),
+                downloadButton(ns("downloadGSEA"), 'Download GSEA Plot', class = 'DLButton'),
+                downloadButton(ns("downloadGSEATable"), 'Download GSEA Table', class = 'DLButton')
+              )
             ),
-            div(
-              style='margin-left: 60px;',
-              div(
-                class = 'SmallTitleText',
-                'Gene Set Enrichment Analysis'
-              ),
-              br(),
-              shinycssloaders::withSpinner(plotOutput(ns("GSEAResult"), height = 750/2, width = 750/2), type = 2, color="#f88e06", color.background = "white"),
-              br(),
-              tableOutput(ns("GSEATable")),
-              downloadButton(ns("downloadGSEA"), 'Download GSEA Plot', class = 'DLButton'),
-              downloadButton(ns("downloadGSEATable"), 'Download GSEA Table', class = 'DLButton')
-            )
+            ns = ns
           )
         ),
         ns = ns
@@ -152,6 +163,15 @@ ui <- function(id) {
 
 #' @export
 server <- function(input, output, session) {
+  # Update the selection for the projects
+  updateSelectizeInput(
+    session,
+    "project",
+    choices = displayNames,
+    selected = c("AcDSS"),
+    server = TRUE
+  )
+  
   # Create reactive values for the genelist
   genelist <- reactiveValues(genes=c(), title='')
   
@@ -227,13 +247,42 @@ server <- function(input, output, session) {
   # Preprocess the data
   output$heatmapResult <- renderPlot({
     req(genelist$genes)
-    heatmap(input$project, genelist$genes)
+    
+    # If Project is empty, use all of 'em
+    if (length(input$project) == 0) {
+      project <- unlist(displayNames, use.names = FALSE)
+    } else {
+      project <- input$project
+    }
+
+    heatmap(project, genelist$genes)
   })
   
   # Render fold change table
   output$heatmapTable <- renderTable({
     req(genelist$genes)
-    queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+    if (length(input$project) == 1) {
+      tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+    } else {
+      # If Project is empty, use all of 'em
+      if (length(input$project) == 0) {
+        project <- unlist(displayNames, use.names = FALSE)
+      } else {
+        project <- input$project
+      }
+      tabresult <- NULL
+      for (tabname in project) {
+        wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+        wdf['Model'] <- names(displayNames)[displayNames == tabname]
+        if (is.null(tabresult) == T){
+          tabresult <- wdf
+        } else {
+          tabresult <- rbind(tabresult, wdf)
+        }
+      }
+    }
+
+    tabresult
   }, digits = 5)
   
   # Render informative note about the gene selection
@@ -242,10 +291,19 @@ server <- function(input, output, session) {
     '<b>NOTE:</b> Because there are different models being displayed, the statistical indicator to consider is the <b>P adjusted value</b>, not the P value.'
   })
   
-  # Check if it has to display the plots
+  # Check if it has to display the heatmap
   output$heatmapDisplay <- reactive({
     # check if there is data to display
-    if (dim(queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')])[1] > 1) {
+    # Adapt for cases
+    if (length(input$project) == 0) {
+      tab <- 'AcDSS'
+    } else if (length(input$project) == 1) {
+      tab <- input$project
+    } else {
+      tab <- input$project[1]
+    }
+    # do the checking
+    if (dim(queryExperiment(singleExp[[tab]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')])[1] > 1) {
       TRUE
     } else {
       FALSE
@@ -253,19 +311,34 @@ server <- function(input, output, session) {
   })
   outputOptions(session$output, "heatmapDisplay", suspendWhenHidden = FALSE)
   
+  # Check if it has to display the plots
+  output$plotsDisplay <- reactive({
+    # check if there is data to display
+    if (length(input$project) == 1) {
+      TRUE
+    } else {
+      FALSE
+    }
+  })
+  outputOptions(session$output, "plotsDisplay", suspendWhenHidden = FALSE)
+  
   # Generate the volcano plot
   output$volcanoResult <- renderPlot({
     req(genelist$genes)
-    volcanoPlot(input$project, genelist$genes)
+    if (length(input$project) == 1) {
+      volcanoPlot(input$project, genelist$genes)
+    }
   })
   
   # Generate the volcano plot
   output$GSEAResult <- renderPlot({
     req(genelist$genes)
-    GSEAresultList <- GSEAgraph(input$project, genelist$genes, genelist$handle)
-    genelist$GSEAtableResult <- GSEAresultList[['table_gsea']]
-    genelist$GSEAplotResult <- GSEAresultList[['plot_GSEA']]
-    GSEAresultList[['plot_GSEA']]
+    if (length(input$project) == 1) {
+      GSEAresultList <- GSEAgraph(input$project, genelist$genes, genelist$handle)
+      genelist$GSEAtableResult <- GSEAresultList[['table_gsea']]
+      genelist$GSEAplotResult <- GSEAresultList[['plot_GSEA']]
+      GSEAresultList[['plot_GSEA']]
+    }
   })
   
   # Render GSEA table
@@ -287,7 +360,27 @@ server <- function(input, output, session) {
       paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'FoldChange.xlsx'), collapse = "_")
     },
     content = function(file) {
-      write.xlsx(queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')], file)
+      if (length(input$project) == 1) {
+        tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+      } else {
+        # If Project is empty, use all of 'em
+        if (length(input$project) == 0) {
+          project <- unlist(displayNames, use.names = FALSE)
+        } else {
+          project <- input$project
+        }
+        tabresult <- NULL
+        for (tabname in project) {
+          wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+          wdf['Model'] <- names(displayNames)[displayNames == tabname]
+          if (is.null(tabresult) == T){
+            tabresult <- wdf
+          } else {
+            tabresult <- rbind(tabresult, wdf)
+          }
+        }
+      }
+      write.xlsx(tabresult, file)
     }
   )
   
