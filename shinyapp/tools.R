@@ -646,7 +646,7 @@ heatmap <- function (project, genelist) {
     }
     
     # Determine maximum value of radius
-    radius <- max(5, 30 - min(15,if (length(levels(circle_df$model)) < 5) {0} else {1.5*length(levels(circle_df$model))}) - min(10,if (length(levels(as.factor(circle_df$EnsGenes))) < 15) {0} else {1.5*length(levels(as.factor(circle_df$EnsGenes)))}))
+    radius <- max(5, 30 - min(15,if (length(levels(circle_df$model)) < 5) {0} else {1.2*length(levels(circle_df$model))}) - min(10,if (length(levels(as.factor(circle_df$EnsGenes))) < 7) {0} else {0.5*length(levels(as.factor(circle_df$EnsGenes)))}))
 
     # Make the plot. Got it from https://stackoverflow.com/questions/67746044/r-heatmap-with-circles
     resultHeatmap <- ggplot(circle_df, aes(model, Genes, fill = FoldChange, size = pval)) +

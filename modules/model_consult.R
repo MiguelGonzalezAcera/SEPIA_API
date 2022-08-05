@@ -39,7 +39,7 @@ ui <- function(id) {
         ),
         div(
           class = 'ToolDesc',
-          'Explore a selection of genes in a chosen mouse IBD model.'
+          'Explore a selection of genes in a chosen mouse IBD model.  The plots labelled green show significant differences, and the ones labelled yellow are flagged for low counts.'
         )
       ),
       

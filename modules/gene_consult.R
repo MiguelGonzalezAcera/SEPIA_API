@@ -47,7 +47,7 @@ ui <- function(id) {
         ),
         div(
           class = 'ToolDesc',
-          'Explore the behaviour of a gene across multiple mouse IBD models. If no models are chosen, all models shall be displayed.'
+          'Explore the behaviour of a gene across multiple mouse IBD models. If no models are chosen, all models shall be displayed. The plots labelled green show significant differences, and the ones labelled yellow are flagged for low counts.'
         )
       ),
       

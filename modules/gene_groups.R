@@ -54,7 +54,7 @@ ui <- function(id) {
         br(),
         div(
           class = 'ToolDesc',
-          'Explore a group of genes in one of the models.',
+          'Explore a group of genes in one of the models. You may select more than one model to explore, with a different type of plot.',
           br(),
           'You can upload your chosen mouse genes in a txt file, with each gene name in a line.',
           br(),
