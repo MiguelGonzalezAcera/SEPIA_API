@@ -392,8 +392,18 @@ server <- function(input, output, session) {
     content = function(file) {
       grDevices::pdf(NULL)
       
-      # Save the image
-      ggsave(file, plot = grid.grabExpr(draw(heatmap(input$project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
+      # If Project is empty, use all of 'em
+      if (length(input$project) == 0) {
+        project <- unlist(displayNames, use.names = FALSE)
+        
+        # Save the image
+        ggsave(file, plot = heatmap(project, genelist$genes), height = 7500, width = 7500, dpi = 650, units = "px")
+      } else {
+        project <- input$project
+        
+        # Save the image
+        ggsave(file, plot = grid.grabExpr(draw(heatmap(project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
+      }
     }
   )
   
