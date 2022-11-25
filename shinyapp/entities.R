@@ -62,7 +62,7 @@ singleExp <- list(
   "WH48" = list("project" = "WoundHealing", "tabid" = "WoundHealing_h48_h0"),
   "EvInf" = list("project" = "Eimeria_vermiformis_model", "tabid" = "Eimeria_vermiformis_model_EV_WT"),
   "HhInf" = list("project" = "HhColitis", "tabid" = "HhColitis_HhCol_SSt"),
-  "CB" = list("project" = "OxaCitro", "tabid" = "OxaCitro_OxC_Healthy")
+  "CB" = list("project" = "OxaCitro", "tabid" = "OxaCitro_CB_Healthy")
 )
 
 #' @export
