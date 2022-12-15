@@ -402,7 +402,7 @@ server <- function(input, output, session) {
         project <- input$project
         
         # Save the image
-        ggsave(file, plot = grid.grabExpr(draw(heatmap(project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
+        ggsave(file, plot = heatmap(project, genelist$genes), height = 7500, width = 7500, dpi = 650, units = "px")
       }
     }
   )
