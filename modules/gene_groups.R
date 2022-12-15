@@ -398,6 +398,11 @@ server <- function(input, output, session) {
         
         # Save the image
         ggsave(file, plot = heatmap(project, genelist$genes), height = 7500, width = 7500, dpi = 650, units = "px")
+      } else if (length(input$project) == 1) {
+        project <- input$project
+        
+        # Save the image
+        ggsave(file, plot = grid.grabExpr(draw(heatmap(project, genelist$genes))), height = 7500, width = 7500, dpi = 650, units = "px")
       } else {
         project <- input$project
         
