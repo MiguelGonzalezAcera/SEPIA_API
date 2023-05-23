@@ -16,9 +16,12 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
+      # Select the models to compare
       selectInput(ns("projectA"), "Project A:", displayNames, selected = 'AcDSS'),
       selectInput(ns("projectB"), "Project B:", displayNames, selected = 'cDSS'),
       
+      # Select genes to highlight
+      #<TODO>: Add an option to upload the gene list. Copy dynamic from Gene groups
       selectizeInput(
         ns("genename"),
         label = "Gene names (optional): ",
@@ -30,8 +33,6 @@ ui <- function(id) {
       # Select image format
       selectInput(ns("fformat"), "Image download format:", imgFormat),
 
-      #submitButton("Update View"),
-      
       width = 3
     ),
     
@@ -42,11 +43,15 @@ ui <- function(id) {
         textOutput(ns("resultTitleComparison"))
       ),
       br(),
+      # Selecting the same two models should display an error.
       conditionalPanel(
         condition = "output.sameprojErrorDisplay == false",
         div(
+          # Fancy little loader bc this could take a bit attached to the plot generation
           shinycssloaders::withSpinner(plotOutput(ns("comparisonPlot"), height = 650, width = 650, click = ns("gene_name")), type = 2, color="#f88e06", color.background = "white"),
           br(),
+          # Section for the gene information
+          #<TODO>: Increase the information when only 1 gene is clicked
           div(style='width: 650px;background-color:rgba(248, 142, 6, 0.2);padding-bottom: 25px;border-style: solid;border-color:rgba(248, 142, 6, 1);',
             br(),
             div(style='margin-left:25px;',
@@ -55,6 +60,7 @@ ui <- function(id) {
           ),
           br(),
           br(),
+          # Note for when a selected gene does not appear in the plot for whichever reason
           conditionalPanel(
             condition = "output.noteDisplay == true",
             div(
@@ -70,10 +76,12 @@ ui <- function(id) {
             ns = ns
           ),
           br(),
+          # Download buttons
           downloadButton(ns("downloadData"), 'Download Genes', class = 'DLButton'),
           downloadButton(ns("downloadSCPlot"), 'Download Scatterplot', class = 'DLButton'),
           br(),
           br(),
+          # Venn diagram section
           div(
             class = 'SmallTitleText',
             textOutput(ns("vennTitleComparison"))
@@ -81,11 +89,13 @@ ui <- function(id) {
           br(),
           uiOutput(ns("vennPlot_ui")),
           br(),
+          # download them venns
           downloadButton(ns("downloadVennPlot"), 'Download Venn diagram', class = 'DLButton'),
           br()
         ),
         ns = ns
       ),
+      # The errror in question when selecting the same exps
       conditionalPanel(
         condition = "output.sameprojErrorDisplay == true",
         div(
@@ -121,6 +131,7 @@ server <- function(input, output, session) {
   output$sameprojErrorDisplay <- reactive({
     input$projectA == input$projectB
   })
+  # Hide the error when false
   outputOptions(session$output, "sameprojErrorDisplay", suspendWhenHidden = FALSE)
   
   # Preprocess the data
@@ -228,7 +239,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadSCPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'scatter',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'scatter'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # plot the thing
@@ -241,7 +252,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadVennPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'venn',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'venn'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # plot the thing

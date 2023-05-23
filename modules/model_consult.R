@@ -9,6 +9,7 @@ box::use(
 
 #' @export
 ui <- function(id) {
+  # Namespace for tagging in modules
   ns <- NS(id)
   
   div(
@@ -17,8 +18,10 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
+      # Select project from dropdown list
       selectInput(ns("project"), "Project:", displayNames),
       
+      # Select the genes. Multiple choice. Updated in the server.
       selectizeInput(
         ns("genename"),
         label = "Gene names: ",
@@ -48,6 +51,7 @@ ui <- function(id) {
     
     # Show the caption and plot of the requested variable against mpg
     mainPanel(
+      # show the errored models if any
       conditionalPanel(
         condition = "output.errorDispl == true",
         tags$div(
@@ -63,6 +67,7 @@ ui <- function(id) {
         ns = ns
       ),
       br(),
+      # Show the results of the query
       conditionalPanel(
         condition = "output.plotDisplay == true",
         div(
@@ -190,7 +195,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'boxplot'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # plot the thing

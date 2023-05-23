@@ -9,16 +9,19 @@ box::use(
 
 #' @export
 ui <- function(id) {
+  # Namespace for tagging in modules
   ns <- NS(id)
-  
+  # Css theme
   theme = "main.css"
   
+  # Module
   div(
     # Application title
     headerPanel("Gene consult"),
     
     # Application sidebar
     sidebarPanel(
+      # Make genename inputs. Allowed only one
       selectizeInput(
         ns("genename"),
         label = "Gene name: ",
@@ -27,6 +30,7 @@ ui <- function(id) {
         width = "100%"
       ),
       
+      # Make projects inputs. Allowed many. Updated in the server side with the options.
       selectizeInput(
         ns("project"),
         label = "Project:",
@@ -56,6 +60,7 @@ ui <- function(id) {
     
     # Show the caption and plot of the requested variable against mpg
     mainPanel(
+      # Show the error panels if there were any
       conditionalPanel(
         condition = "output.errorDispl == true",
         tags$div(
@@ -71,24 +76,31 @@ ui <- function(id) {
         ns = ns
       ),
       br(),
+
+      # Show the result frame if the genes are in the selected models.
       conditionalPanel(
         condition = "output.plotDisplay == true",
         div(
+          # Formatted title
           div(
             class = 'SmallTitleText',
             textOutput(ns("resultTitleCounts"))
           ),
           br(),
+          # Display the plot
           uiOutput(ns("countsPlot_ui")),
           br(),
           br(),
+          # title for the table
           div(
             class = 'SmallTitleText',
             textOutput(ns("resultTitle"))
           ),
           br(),
+          # Table with the FCs and the pvals
           tableOutput(ns("FCtable")),
           br(),
+          # Download buttons for the plot and table
           downloadButton(ns("downloadData"), 'Download Table', class = 'DLButton'),
           downloadButton(ns("downloadPlot"), 'Download Graphic', class = 'DLButton')
         ),
@@ -154,7 +166,7 @@ server <- function(input, output, session) {
   # Create and render barplot for counts
   output$countsPlot <- renderPlot({
     req(input$genename)
-    # 'You could do it with facet_wrap' If you can tell me how to make the control of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
+    # 'You could do it with facet_wrap' If you can tell me how to make the control set of samples of multiple experiments, named differently sometimes, appear always on the left while using facet_wrap, I'll invite you for dinner, you god damned smartass
     ggarrange(
       plotlist = preprocResultInput()[['countsData']], 
       ncol = ifelse(
@@ -213,7 +225,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as jpeg in proper resolution
   output$downloadPlot <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'boxplot',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'boxplot'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # plot the thing

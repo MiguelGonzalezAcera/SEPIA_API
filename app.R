@@ -15,6 +15,8 @@ box::use(
 
 #addResourcePath('static', 'static/')
 
+# Router for the pages. The stuff behind menu thingy atop the page to navigate.
+#<NOTE>: If I'm gonna keep adding tools to this thing I should make it a dropdown menu
 router <- make_router(
   route("/", introduction$ui("introduction")),
   route("gene_consult", gene_consult$ui("gene_consult")),
@@ -25,9 +27,12 @@ router <- make_router(
   route("contact", contact$ui("contact"))
 )
 
+# User interface for the website
 ui <- fluidPage(
+  # Get the css config
   theme = "main.css",
   
+  # Place the links to the other pages. Elements are tagged to be recognized by the css
   tags$ul(
     tags$li(a(href = route_link("/"), "Home")),
     tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
@@ -37,6 +42,8 @@ ui <- fluidPage(
     tags$li(a(href = route_link("FAQ"), "FAQ")),
     tags$li(a(href = route_link("contact"), "Contact"))
   ),
+  # Title.
+  #<NOTE>: We should make a logo.
   titlePanel(
     title = div(
       img(src = "logo1.png", height = 100),
@@ -45,21 +52,23 @@ ui <- fluidPage(
     )
   ),
 
+  # Establish the log in and logout buttons
   # add logout button UI
   div(class = "pull-right", logoutUI(id = "logout")),
   # add login panel UI function
   loginUI(id = "login"),
-  
-  # Establish content
+
+  # Establish content through whatever the router is running
   router$ui,
-  
+
   # Last break and bottom banner
   div(
-    class = 'footer',
+    class = "footer",
     textOutput("gitVers"),
   )
 )
 
+# Server side commands
 server <- function(input, output, session) {
   # call login module supplying data frame, 
   # user and password cols and reactive trigger
@@ -78,12 +87,14 @@ server <- function(input, output, session) {
     active = reactive(credentials()$user_auth)
   )
   
+  # Add the current version of the git repo
   output$gitVers <- renderText({
     sortedTagList <- git2r::tags(repo = '.')[order(names(git2r::tags(repo = ".")))]
     tagVers <- names(sortedTagList)[length(sortedTagList)]
     sprintf('Version: %s', tagVers)
   })
   
+  # Run the modules if lig is successful
   observeEvent(credentials()$user_auth, {
     # if user logs in successfully
     if (credentials()$user_auth) { 
