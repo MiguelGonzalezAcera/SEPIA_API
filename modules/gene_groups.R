@@ -29,6 +29,7 @@ ui <- function(id) {
     
     # Application sidebar
     sidebarPanel(
+      # Project names
       selectizeInput(
         ns("project"),
         label = "Project:",
@@ -37,6 +38,7 @@ ui <- function(id) {
         width = "100%"
       ),
       
+      # Selection of markers
       selectInput(ns("genelist_markers"), "Available markers:", markerNames),
       
       # Upload data
@@ -80,11 +82,13 @@ ui <- function(id) {
     
     # Show the caption and plot of the requested variable against mpg
     mainPanel(
+      # Title
       div(
         class = 'SmallTitleText',
         textOutput(ns("heatmapTitle"))
       ),
       br(),
+      # Show error if heatmap doesn't display for reasons
       conditionalPanel(
         condition = "output.heatmapDisplay == false",
         tags$div(
@@ -97,17 +101,21 @@ ui <- function(id) {
         ),
         ns = ns
       ),
+      # Show heatmap image
       conditionalPanel(
         condition = "output.heatmapDisplay == true",
         div(
+          # Heatmap
           div(style='margin-left:200px',
             shinycssloaders::withSpinner(plotOutput(ns("heatmapResult"), height = 750, width = 750), type = 2, color="#f88e06", color.background = "white")
           ),
           br(),
+          # Table
           div(style='margin-left:275px; height:400px; width: 650px; overflow-y: scroll;',
             tableOutput(ns("heatmapTable"))
           ),
           br(),
+          # Note about the table
           div(style='margin-left:275px',
             class = 'fcTableNoteFrame',
             div(
@@ -119,13 +127,16 @@ ui <- function(id) {
             )
           ),
           br(),
+          # Download buttons
           downloadButton(ns("downloadHmap"), 'Download Heatmap', class = 'DLButton'),
           downloadButton(ns("downloadTable"), 'Download Table', class = 'DLButton'),
           br(),
           br(),
           br(),
+          # Additional plots for single experiments
           conditionalPanel(
             condition = 'output.plotsDisplay == true',
+            # Volcano plot
             div(style='display: flex;',
               div(
                 style='margin-left: 60px;',
@@ -138,6 +149,7 @@ ui <- function(id) {
                 br(),
                 downloadButton(ns("downloadVolc"), 'Download Volcano plot', class = 'DLButton')
               ),
+              # GSEA plot
               div(
                 style='margin-left: 60px;',
                 div(
@@ -176,6 +188,7 @@ server <- function(input, output, session) {
   genelist <- reactiveValues(genes=c(), title='')
   
   # create two observeEvent to select the usable genelist
+  # Reacts when the markers are changed
   observeEvent(input$genelist_markers,{
     genelist$genes <- getMarkerlist(input$genelist_markers)
     genelist$title <- sprintf('Behaviour of the gene markers for %s', names(markerNames)[match(input$genelist_markers,markerNames)])
@@ -183,6 +196,7 @@ server <- function(input, output, session) {
     genelist$handle <- names(markerNames)[match(input$genelist_markers,markerNames)]
   })
   
+  # Upload the list of genes
   observeEvent(input$genelist_upload,{
     # Hide existing feedback
     hideFeedback("genelist_upload")
@@ -201,6 +215,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # Use an uploaded genelist
   observeEvent(input$genelist_upload,{
     # Check if the extension is the one
     extUpl <- endsWith(input$genelist_upload$datapath, '.txt') | endsWith(input$genelist_upload$datapath, '.xlsx')
@@ -232,6 +247,7 @@ server <- function(input, output, session) {
     }
     req(extGenes, cancelOutput = TRUE)
     
+    # Assign values to object
     genelist$genes <- readGenelist(input$genelist_upload$datapath)
     genelist$title <- 'Behaviour of the uploaded gene list'
     genelist$errormess <- 'The genes from the uploaded gene list are unavailable in the selected project'
@@ -330,7 +346,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Generate the volcano plot
+  # Generate the GSEA plot
   output$GSEAResult <- renderPlot({
     req(genelist$genes)
     if (length(input$project) == 1) {
@@ -387,7 +403,7 @@ server <- function(input, output, session) {
   # Make dowload button for the plot as png in proper resolution
   output$downloadHmap <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'heatmap',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'heatmap'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       grDevices::pdf(NULL)
@@ -414,7 +430,7 @@ server <- function(input, output, session) {
   
   output$downloadVolc <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'Volcano',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'Volcano'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # Save the image
@@ -424,7 +440,7 @@ server <- function(input, output, session) {
   
   output$downloadGSEA <- downloadHandler(
     filename = function() {
-      paste(c("Sepia",gsub("-","",as.character(Sys.Date())),'GSEA',input$fformat), collapse = "_")
+      paste(c(paste(c("Sepia", gsub("-","",as.character(Sys.Date())), 'GSEA'), collapse = "_"), input$fformat), collapse = "")
     },
     content = function(file) {
       # Save the image
