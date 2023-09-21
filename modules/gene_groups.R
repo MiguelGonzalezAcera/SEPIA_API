@@ -278,7 +278,7 @@ server <- function(input, output, session) {
   output$heatmapTable <- renderTable({
     req(genelist$genes)
     if (length(input$project) == 1) {
-      tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+      tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj','FLAG')]
     } else {
       # If Project is empty, use all of 'em
       if (length(input$project) == 0) {
@@ -288,7 +288,7 @@ server <- function(input, output, session) {
       }
       tabresult <- NULL
       for (tabname in project) {
-        wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+        wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj','FLAG')]
         wdf['Model'] <- names(displayNames)[displayNames == tabname]
         if (is.null(tabresult) == T){
           tabresult <- wdf
@@ -319,7 +319,7 @@ server <- function(input, output, session) {
       tab <- input$project[1]
     }
     # do the checking
-    if (dim(queryExperiment(singleExp[[tab]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')])[1] > 1) {
+    if (dim(queryExperiment(singleExp[[tab]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj','FLAG')])[1] > 1) {
       TRUE
     } else {
       FALSE
@@ -377,7 +377,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       if (length(input$project) == 1) {
-        tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+        tabresult <- queryExperiment(singleExp[[input$project]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj','FLAG')]
       } else {
         # If Project is empty, use all of 'em
         if (length(input$project) == 0) {
@@ -387,7 +387,7 @@ server <- function(input, output, session) {
         }
         tabresult <- NULL
         for (tabname in project) {
-          wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj')]
+          wdf <- queryExperiment(singleExp[[tabname]][['tabid']], genelist$genes)[c('EnsGenes','Genes','log2FoldChange','pvalue','padj','FLAG')]
           wdf['Model'] <- names(displayNames)[displayNames == tabname]
           if (is.null(tabresult) == T){
             tabresult <- wdf
