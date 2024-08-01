@@ -46,9 +46,8 @@ ui <- fluidPage(
   #<NOTE>: We should make a logo.
   titlePanel(
     title = div(
-      img(src = "logo1.png", height = 100),
+      img(src = "SepiaLogo.png", height = 175),
       br(),
-      "SEpIa"
     )
   ),
 

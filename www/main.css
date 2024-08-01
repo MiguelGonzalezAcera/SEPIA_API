@@ -39,14 +39,23 @@ ul li a {
   transition: all, 0.4s;
 }
 
+ul li a:hover {
+  background-color: #da9016;
+    color: #ffffff;
+}
+
 a:link, a:visited, a:hover, a:active {
   color: #ffffff;
     text-decoration: none;
 }
 
-ul li a:hover {
-  background-color: #da9016;
-    color: #ffffff;
+.introTitle {
+  font-size: 20px;
+}
+
+.introText a {
+  color: #da9016;
+    text-decoration: none;
 }
 
 .errorFrame {

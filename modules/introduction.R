@@ -23,11 +23,17 @@ ui <- function(id) {
     ),
     
     mainPanel(
-      # title of the section, with the name of the model
-      textOutput(ns("introdTitle")),
+      div(
+        class = 'introTitle',
+        # title of the section, with the name of the model
+        textOutput(ns("introdTitle"))
+      ),
       br(),
-      # Description of the selected model
-      htmlOutput(ns("introdDesc")),
+      div(
+        class = 'introText',
+        # Description of the selected model
+        htmlOutput(ns("introdDesc"))
+      ),
     )
   )
 }
@@ -36,7 +42,7 @@ ui <- function(id) {
 server <- function(input, output, session) {
   # Title string
   output$introdTitle <- renderText({
-    sprintf('A brief description of the %s mouse model', names(displayNames)[match(input$project,displayNames)])
+    sprintf('%s mouse model', names(displayNames)[match(input$project,displayNames)])
   })
   
   # Description, rendered in html format
