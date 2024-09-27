@@ -158,3 +158,6 @@ markerNames <- list(
 imgLabels <- list(
   'logo1' = "www/logo1.png"
 )
+
+#' @export
+contactDesc <- "</br><b>Lead developer:</b></br>\tMiguel Gonzalez Acera</br>\tMiguel.GonzalezAcera@uk-erlangen.de</br></br><b>Project chief:</b></br>\tChristoph Becker</br>\tChristoph.becker@uk-erlangen.de</br></br><b>\tIMPORTANT</b>: As the tool is constantly being developed, some errors and bugs are expected as new features are added. If a bug or a mistake is found when consulting the information hosted, please contact us and communicate us the issue, and we will fix it as soon as possible.</br></br><b>Cite us:</b></br>Miguel Gonzalez Acera, Jay V. Patankar, Lena Erkert, Roodline Cineus, Reyes Gámez-Belmonte, Tamara Leupold, Marvin Bubeck, Li-Li Bao, Martin Dinkel, Ru Wang, Heidi Limberger, Iris Stolzer, Katharina Gerlach, Fabrizio Mascia, Kristina Koop, Christina Plattner, Gregor Sturm, Benno Weigmann, Claudia Günther, Stefan Wirtz, Kai Hildner, Anja A. Kühl, Britta Siegmund, Raja Atreya, The IBDome Consortium, Ahmed N. Hegazy, Zlatko Trajanoski, Markus F. Neurath, and Christoph Becker. \"Integrated Multi-Model Analysis of Intestinal Inflammation Exposes Key Molecular Features of Preclinical and Clinical IBD\" bioRxiv, August 20, 2024. (<a href=\"https://doi.org/10.1101/2024.08.14.607902.\">DOI</a>)"
