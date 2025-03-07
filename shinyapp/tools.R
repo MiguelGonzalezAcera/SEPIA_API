@@ -658,7 +658,7 @@ heatmap <- function(project, genelist) {
     limitEdges <- c(min(min(circle_df$FoldChange),-2),max(max(circle_df$FoldChange),2))
 
     # Define the scaling of the colors (Lord help me)
-    colorscale <- c("blue", "white", "red")
+    colorscale <- c("purple", "#faebd7", "orange")
 
     # Get the values for the color scale maximums
     minblue <- (-2 - limitEdges[1]) / (limitEdges[2] - limitEdges[1])
@@ -669,12 +669,12 @@ heatmap <- function(project, genelist) {
 
     # Set additional values if necessary
     if (minblue > 0) {
-      colorscale <- c("blue", colorscale)
+      colorscale <- c("purple", colorscale)
       valuescale <- c(0, valuescale)
     }
 
     if (maxred < 1) {
-      colorscale <- c(colorscale, "red")
+      colorscale <- c(colorscale, "orange")
       valuescale <- c(valuescale, 1)
     }
 
@@ -757,7 +757,7 @@ heatmap <- function(project, genelist) {
     })
 
     # Establish colors
-    color <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
+    color <- colorRamp2(c(-2, 0, 2), c("purple", "#faebd7", "orange"))
 
     # Make the heatmap (hide the names if it is too large)
     #<TODO>: The legend is technically the same object, so it could be moved out of these clusterfucks
@@ -833,7 +833,7 @@ volcanoPlot <- function(project, genelist) {
       ymin = -log10(0.05),
       ymax = Inf,
       linetype = "blank",
-      fill = "red",
+      fill = "orange",
       alpha = 0.2
     ) +
     annotate(
@@ -843,7 +843,7 @@ volcanoPlot <- function(project, genelist) {
       ymin = -log10(0.05),
       ymax = Inf,
       linetype = "blank",
-      fill = "blue",
+      fill = "purple",
       alpha = 0.2
     ) +
     ylim(0, max(25, max(genelistDF$padj_fix))) +
@@ -859,10 +859,10 @@ volcanoPlot <- function(project, genelist) {
 
   # Add the colored dots (if any)
   if (dim(genelistDFUp)[1] != 0) {
-    plot <- plot + geom_point(data = genelistDFUp, aes(x = log2FoldChange, y = padj_fix), color = "red", size = 3)
+    plot <- plot + geom_point(data = genelistDFUp, aes(x = log2FoldChange, y = padj_fix), color = "orange", size = 3)
   }
   if (dim(genelistDFDw)[1] != 0) {
-    plot <- plot + geom_point(data = genelistDFDw, aes(x = log2FoldChange, y = padj_fix), color = "blue", size = 3)
+    plot <- plot + geom_point(data = genelistDFDw, aes(x = log2FoldChange, y = padj_fix), color = "purple", size = 3)
   }
   
   # Return the plot
@@ -888,7 +888,7 @@ GSEAgraph <- function(project, genelist, handle) {
   
   # Save the objects
   GSEAtable <- as.data.frame(z)
-  GSEAplot <- gseaplot2(z, geneSetID = 1, color="red", pvalue_table = FALSE)
+  GSEAplot <- gseaplot2(z, geneSetID = 1, color="orange", pvalue_table = FALSE)
   
   # Amalgame the results in a list
   result = list(
