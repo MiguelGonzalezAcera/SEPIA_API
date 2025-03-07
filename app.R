@@ -4,6 +4,7 @@ box::use(
   shinythemes[...],
   shinyauthr[...],
   . / modules / gene_consult,
+  . / modules / landing,
   . / modules / model_consult,
   . / modules / model_comparison,
   . / modules / introduction,
@@ -18,7 +19,8 @@ box::use(
 # Router for the pages. The stuff behind menu thingy atop the page to navigate.
 #<NOTE>: If I'm gonna keep adding tools to this thing I should make it a dropdown menu
 router <- make_router(
-  route("/", introduction$ui("introduction")),
+  route("/", landing$ui("landing_page")),
+  route("model_description", introduction$ui("introduction")),
   route("gene_consult", gene_consult$ui("gene_consult")),
   route("model_consult", model_consult$ui("model_consult")),
   route("model_comparison", model_comparison$ui("model_comparison")),
@@ -35,6 +37,7 @@ ui <- fluidPage(
   # Place the links to the other pages. Elements are tagged to be recognized by the css
   tags$ul(
     tags$li(a(href = route_link("/"), "Home")),
+    tags$li(a(href = route_link("model_description"), "Model Description")),
     tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
     tags$li(a(href = route_link("model_consult"), "Model Consult")),
     tags$li(a(href = route_link("model_comparison"), "Model Comparison")),
@@ -43,7 +46,6 @@ ui <- fluidPage(
     tags$li(a(href = route_link("contact"), "Contact"))
   ),
   # Title.
-  #<NOTE>: We should make a logo.
   titlePanel(
     title = div(
       img(src = "SepiaLogo.png", height = 175),
@@ -99,6 +101,7 @@ server <- function(input, output, session) {
     if (credentials()$user_auth) { 
       router$server(input, output, session)
       
+      callModule(landing$server, "landing_page")
       callModule(introduction$server, "introduction")
       callModule(gene_consult$server, "gene_consult")
       callModule(model_consult$server, "model_consult")
