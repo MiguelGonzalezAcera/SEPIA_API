@@ -9,7 +9,7 @@ body {
     padding: 25px;
 }
 
-ul {
+.header ul {
   background-color: #f88e06;
     display: flex;
   justify-content: flex-end;
@@ -30,7 +30,7 @@ ul {
   list-style-type: none;
 }
 
-ul li a {
+.header ul li a {
   color: #ffffff;
     display: block;
   font-size: 1.6rem;
@@ -39,7 +39,7 @@ ul li a {
   transition: all, 0.4s;
 }
 
-ul li a:hover {
+.header ul li a:hover {
   background-color: #da9016;
     color: #ffffff;
 }

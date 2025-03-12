@@ -35,15 +35,18 @@ ui <- fluidPage(
   theme = "main.css",
   
   # Place the links to the other pages. Elements are tagged to be recognized by the css
-  tags$ul(
-    tags$li(a(href = route_link("/"), "Home")),
-    tags$li(a(href = route_link("model_description"), "Model Description")),
-    tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
-    tags$li(a(href = route_link("model_consult"), "Model Consult")),
-    tags$li(a(href = route_link("model_comparison"), "Model Comparison")),
-    tags$li(a(href = route_link("gene_groups"), "Gene groups")),
-    tags$li(a(href = route_link("FAQ"), "FAQ")),
-    tags$li(a(href = route_link("contact"), "Contact"))
+  div(
+    class = "header",
+    tags$ul(
+      tags$li(a(href = route_link("/"), "Home")),
+      tags$li(a(href = route_link("model_description"), "Model Description")),
+      tags$li(a(href = route_link("gene_consult"), "Gene Consult")),
+      tags$li(a(href = route_link("model_consult"), "Model Consult")),
+      tags$li(a(href = route_link("model_comparison"), "Model Comparison")),
+      tags$li(a(href = route_link("gene_groups"), "Gene groups")),
+      tags$li(a(href = route_link("FAQ"), "FAQ")),
+      tags$li(a(href = route_link("contact"), "Citation and contact"))
+    )
   ),
   # Title.
   titlePanel(
