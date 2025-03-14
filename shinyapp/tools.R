@@ -17,7 +17,7 @@ box::use(
   grid[...],
   clusterProfiler[...],
   enrichplot[...],
-  . / entities[fullExp, singleExp, displayNames],
+  . / entities[fullExp, singleExp, displayNames, displayNames_sort],
 )
 
 #'@export
@@ -638,10 +638,10 @@ heatmap <- function(project, genelist) {
       )
 
       # Element5: Table name
-      wdf["model"] <- names(displayNames)[displayNames == column]
+      wdf["model"] <- names(displayNames_sort)[displayNames == column]
 
       # Add display name to model names
-      modelNames <- c(modelNames, names(displayNames)[displayNames == column])
+      modelNames <- c(modelNames, names(displayNames_sort)[displayNames == column])
 
       if (is.null(circle_df) == TRUE) {
         circle_df <- wdf

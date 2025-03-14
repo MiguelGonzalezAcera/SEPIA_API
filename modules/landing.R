@@ -58,31 +58,63 @@ ui <- function(id) {
                 class = 'rowF',
                 div(
                     class = 'columnF',
-                    img(src = 'logo1_trnsp.png', height = 100)
+                    a(href = 'https://transregio241-en.webspace.rrze.de/',
+                      img(src = 'logo1_trnsp.png', alt = "transregio241-en.webspace.rrze.de", height = 50)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'FAU_logo2.png', height = 70)
+                    a(href = 'https://www.uk-erlangen.de',
+                      img(src = 'UK-logo.png', alt = "uk-erlangen.de", height = 50)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'Charite_logo.png', height = 70)
+                    a(href = 'https://www.fau.de/',
+                      img(src = 'FAU_logo3.png', alt = "fau.de", height = 50)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'drfz.png', height = 70)
+                    a(href = 'https://www.charite.de/',
+                      img(src = 'Charite_logo.png', alt = "charite.de", height = 50)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'Logo_i-med_trnsp.png', height = 100)
+                    a(href = 'https://www.dfg.de/',
+                      img(src = 'dfg_logo.png', alt = "dfg.de", height = 40)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'MDC_logo.png', height = 110)
+                    a(href = 'https://www.drfz.de/',
+                      img(src = 'drfz.png', alt = "drfz.de", height = 40)
+                    )
                 ),
                 div(
                     class = 'columnF',
-                    img(src = 'uksh_logo.png', height = 100)
+                    a(href = 'https://biocenter.i-med.ac.at/',
+                      img(src = 'biocenter_logo3.png', alt = "biocenter.i-med.ac.at/", height = 70)
+                    )
+                ),
+                div(
+                    class = 'columnF',
+                    a(href = 'https://www.i-med.ac.at/mypoint/',
+                      img(src = 'Logo_i-med_trnsp.png', alt = "i-med.ac.at", height = 70)
+                    )
+                ),
+                div(
+                    class = 'columnF',
+                    a(href = 'https://www.mdc-berlin.de/',
+                      img(src = 'MDC_logo.png', alt = "mdc-berlin.de", height = 80)
+                    )
+                ),
+                div(
+                    class = 'columnF',
+                    a(href = 'https://www.uksh.de/',
+                      img(src = 'uksh_logo.png', alt = "uksh.de", height = 70)
+                    )
                 )
             )
         )

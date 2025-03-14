@@ -140,10 +140,10 @@ a:link, a:visited, a:hover, a:active {
 .landing_footer {
   color: #ffffff;
   bottom: 0;
-  height: 130px;
+  height: 100px;
   margin: auto;
   padding: 5px 10px;
-  background-color: #FACA8B;
+  background-color: #FFDCAE;
     /* display: flex; */
   list-style-type: none;
 }
@@ -159,7 +159,7 @@ a:link, a:visited, a:hover, a:active {
   justify-content: center;
   align-items: center;
   /* float: left; */
-  width: 15%;
+  width: 7%;
   padding: 5px;
   display: table-cell;
   vertical-align: middle;

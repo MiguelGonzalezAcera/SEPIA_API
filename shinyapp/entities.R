@@ -99,6 +99,36 @@ displayNames <- list("Acute DSS (2%)" = "AcDSS",
                      )
 
 #' @export
+displayNames_sort <- list("AcDSS" = "AcDSS",
+                    #  "Acute DSS (1.5%)" = "AOMDSS_e",
+                     "cDSS" = "cDSS",
+                    #  "Chronic DSS (1%)" = "AOMDSS_l",
+                    #  "AOM DSS" = "AOMDSS_t",
+                    #  "DSS Time course - Mid inflammation (DSS 3%, day 3)" = "DSSTCim",
+                    #  "DSS Time course - High inflammation (DSS 3%, day 8)" = "DSSTCih",
+                    #  "DSS Time course - Moderate recovery (after DSS, day 12)" = "DSSTCrm",
+                    #  "DSS Time course - Full recovery (after DSS, day 19)" = "DSSTCrf",
+                    #  "Oxazolone colitis - Old version" = "OxC_old",
+                     "Casp8ΔIECCol" = "C8KOc",
+                     "Casp8ΔIECIle" = "C8KOi",
+                     "Opa1ΔIEC" = "Opa1KO",
+                     "OxaC" = "OxC",
+                     "TC" = "TC",
+                     "TnfΔARECol" = "TdAc",
+                     "TnfΔAREIle" = "TdAi",
+                     "AcTNBS" = "AcTNBS",
+                     "cTNBS" = "cTNBS",
+                     "AntiCD3_6h" = "AntiCD36h",
+                     "AntiCD3_24h" = "AntiCD324h",
+                    #  "Wound Healing time course - h6" = "WH6",
+                    #  "Wound Healing time course - h24" = "WH24",
+                    #  "Wound Healing time course - h48" = "WH48",
+                     "Everm" = "EvInf",
+                     "Hhepa" = "HhInf",
+                     "Crode" = "CB"
+                     )
+
+#' @export
 imgFormat <- list("PNG" = ".png",
                   "JPEG" = ".jpeg",
                   "PDF" = ".pdf",
