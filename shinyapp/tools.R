@@ -454,8 +454,11 @@ preprocComparisons <- function(projectA, projectB, genename) {
   # Generate the venn diagrams
   vennDiags <- vennComparison(dbRNARowsFiltA, dbRNARowsFiltB, c(projectNameA, projectNameB))
 
-  # Merge both dataframes according to gene
-  dbRNARowsMerg <- merge(dbRNARowsFiltA, dbRNARowsFiltB, by = c("EnsGenes","Genes"), all = FALSE)
+  # Merge both dataframes according to ensemblID
+  dbRNARowsMerg <- merge(dbRNARowsFiltA, dbRNARowsFiltB, by = c("EnsGenes"), all = FALSE)
+
+  # Add the gene name column AFTER the merge
+  dbRNARowsMerg['Genes'] <- dbRNARowsMerg['Genes.x']
 
   # Create the base plot
   plot2 <- ggplot(dbRNARowsMerg, aes(x = log2FoldChange.x, y = log2FoldChange.y)) +
