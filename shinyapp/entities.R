@@ -70,7 +70,7 @@ singleExp <- list(
 
 #' @export
 displayNames <- list("Acute DSS (2%)" = "AcDSS",
-                     "Acute DSS (1.5%)" = "AOMDSS_e",
+                    #  "Acute DSS (1.5%)" = "AOMDSS_e",
                      "Chronic DSS (2%)" = "cDSS",
                     #  "Chronic DSS (1%)" = "AOMDSS_l",
                     #  "AOM DSS" = "AOMDSS_t",
