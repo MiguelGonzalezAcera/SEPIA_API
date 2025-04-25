@@ -58,6 +58,7 @@ ui <- function(id) {
           class = 'ToolDesc',
           'Explore a group of genes in one of the models. You may select more than one model to explore, with a different type of plot.',
           br(),
+          br(),
           'You can upload your chosen mouse genes in a txt file, with each gene name in a line.',
           br(),
           'Example:',
@@ -104,6 +105,22 @@ ui <- function(id) {
       # Show heatmap image
       conditionalPanel(
         condition = "output.heatmapDisplay == true",
+        conditionalPanel(
+          condition = 'output.plotsDisplay == false',
+          div(style='margin-left:275px',
+            class = 'fcTableNoteFrame',
+            div(
+              class = 'NoteFrame',
+              div(
+                class = 'NoteContent',
+                htmlOutput(ns('multHmapNote'))
+              )
+            )
+          ),
+          ns = ns
+        ),
+        br(),
+        br(),
         div(
           # Heatmap
           div(style='margin-left:200px',
@@ -305,6 +322,12 @@ server <- function(input, output, session) {
   output$fctableNote <- renderText({
     req(genelist$genes)
     '<b>NOTE:</b> Because there are different models being displayed, the statistical indicator to consider is the <b>P adjusted value</b>, not the P value.'
+  })
+
+  # Render informative note about the multiple exp hmap
+  output$multHmapNote <- renderText({
+    req(genelist$genes)
+    '<b>NOTE:</b> The values represented in this heatmap are the <b>log2 Fold change</b> of the inflamed samples compared against their controls. Genes that are significantly altered (Wald test) in inflamed samples are indicated with an asterisk (✽).'
   })
   
   # Check if it has to display the heatmap

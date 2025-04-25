@@ -9,7 +9,7 @@ body {
     padding: 25px;
 }
 
-ul {
+.header ul {
   background-color: #f88e06;
     display: flex;
   justify-content: flex-end;
@@ -30,7 +30,7 @@ ul {
   list-style-type: none;
 }
 
-ul li a {
+.header ul li a {
   color: #ffffff;
     display: block;
   font-size: 1.6rem;
@@ -39,7 +39,7 @@ ul li a {
   transition: all, 0.4s;
 }
 
-ul li a:hover {
+.header ul li a:hover {
   background-color: #da9016;
     color: #ffffff;
 }
@@ -105,3 +105,68 @@ a:link, a:visited, a:hover, a:active {
   background-color: #da9016;
   color: white;
 }
+
+/* Info for columns */
+.column {
+  float: left;
+  width: 33.33%;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.introTextLand {
+  margin: auto;
+  text-align: center;
+}
+
+.landing {
+  margin: auto;
+  width: 80%;
+}
+
+.landing img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing_footer {
+  color: #ffffff;
+  bottom: 0;
+  height: 100px;
+  margin: auto;
+  padding: 5px 10px;
+  background-color: #FFDCAE;
+    /* display: flex; */
+  list-style-type: none;
+}
+
+.rowF {
+  width: 100%;
+  height: 100%;
+  display:table-row;
+}
+
+/* Info for columns */
+.columnF {
+  justify-content: center;
+  align-items: center;
+  /* float: left; */
+  width: 7%;
+  padding: 5px;
+  display: table-cell;
+  vertical-align: middle;
+}
+/* 
+.columnF img {
+  vertical-align: middle;
+  margin-left: auto;
+  margin-right: auto;
+} */
