@@ -56,11 +56,11 @@ ui <- fluidPage(
     )
   ),
 
-  # Establish the log in and logout buttons
-  # add logout button UI
-  div(class = "pull-right", logoutUI(id = "logout")),
-  # add login panel UI function
-  loginUI(id = "login"),
+  # # Establish the log in and logout buttons
+  # # add logout button UI
+  # div(class = "pull-right", logoutUI(id = "logout")),
+  # # add login panel UI function
+  # loginUI(id = "login"),
 
   # Establish content through whatever the router is running
   router$ui,
@@ -74,22 +74,22 @@ ui <- fluidPage(
 
 # Server side commands
 server <- function(input, output, session) {
-  # call login module supplying data frame, 
-  # user and password cols and reactive trigger
-  credentials <- shinyauthr::loginServer(
-    id = "login",
-    data = userBase,
-    user_col = user,
-    pwd_col = password,
-    reload_on_logout = TRUE,
-    log_out = reactive(logout_init())
-  )
+  # # call login module supplying data frame,
+  # # user and password cols and reactive trigger
+  # credentials <- shinyauthr::loginServer(
+  #   id = "login",
+  #   data = userBase,
+  #   user_col = user,
+  #   pwd_col = password,
+  #   reload_on_logout = TRUE,
+  #   log_out = reactive(logout_init())
+  # )
   
-  # call the logout module with reactive trigger to hide/show
-  logout_init <- shinyauthr::logoutServer(
-    id = "logout",
-    active = reactive(credentials()$user_auth)
-  )
+  # # call the logout module with reactive trigger to hide/show
+  # logout_init <- shinyauthr::logoutServer(
+  #   id = "logout",
+  #   active = reactive(credentials()$user_auth)
+  # )
   
   # Add the current version of the git repo
   output$gitVers <- renderText({
@@ -98,22 +98,34 @@ server <- function(input, output, session) {
     sprintf('Version: %s', tagVers)
   })
   
-  # Run the modules if lig is successful
-  observeEvent(credentials()$user_auth, {
-    # if user logs in successfully
-    if (credentials()$user_auth) { 
-      router$server(input, output, session)
+  # # Run the modules if lig is successful
+  # observeEvent(credentials()$user_auth, {
+  #   # if user logs in successfully
+  #   if (credentials()$user_auth) { 
+  #     router$server(input, output, session)
       
-      callModule(landing$server, "landing_page")
-      callModule(introduction$server, "introduction")
-      callModule(gene_consult$server, "gene_consult")
-      callModule(model_consult$server, "model_consult")
-      callModule(model_comparison$server, "model_comparison")
-      callModule(gene_groups$server, "gene_groups")
-      callModule(FAQ$server, "FAQ")
-      callModule(contact$server, "contact")
-    }
-  })
+  #     callModule(landing$server, "landing_page")
+  #     callModule(introduction$server, "introduction")
+  #     callModule(gene_consult$server, "gene_consult")
+  #     callModule(model_consult$server, "model_consult")
+  #     callModule(model_comparison$server, "model_comparison")
+  #     callModule(gene_groups$server, "gene_groups")
+  #     callModule(FAQ$server, "FAQ")
+  #     callModule(contact$server, "contact")
+  #   }
+  # })
+
+  # Run the modules
+  router$server(input, output, session)
+      
+  callModule(landing$server, "landing_page")
+  callModule(introduction$server, "introduction")
+  callModule(gene_consult$server, "gene_consult")
+  callModule(model_consult$server, "model_consult")
+  callModule(model_comparison$server, "model_comparison")
+  callModule(gene_groups$server, "gene_groups")
+  callModule(FAQ$server, "FAQ")
+  callModule(contact$server, "contact")
 }
 
 #app <- shinyApp(ui, server)
