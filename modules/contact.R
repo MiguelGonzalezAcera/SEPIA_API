@@ -31,7 +31,7 @@ server <- function(input, output, session) {
     "<h2>Cite us</h2></br>\
 If you use SEPIA in your scientific publication, please cite the following paper:</br>\
 </br>\
-Gonzalez-Acera, M. et al. Integrated multi-model analysis of intestinal inflammation exposes key molecular features of preclinical and clinical IBD. bioRxiv, 2024.08.14 [<a href=\"https://www.biorxiv.org/content/10.1101/2024.08.14.607902v2\">Biorxiv</a>, <a href=\"https://scholar.google.com/scholar?as_q=Integrated+multi-model+analysis+of+intestinal+inflammation+exposes+key+molecular+features+of+preclinical+and+clinical+IBD&as_epq=&as_oq=&as_eq=&as_occt=any&as_sauthors=Gonzalez-Acera&as_publication=biorxiv&as_ylo=&as_yhi=&hl=es&as_sdt=0%2C5\">Google Scholar</a>]</br>\
+Gonzalez-Acera M, Patankar JV, Erkert L, et al. Integrated multimodel analysis of intestinal inflammation exposes key molecular features of preclinical and clinical IBD. Gut. Published Online First: 29 April 2025. doi: <a href=\"https://doi.org/10.1136/gutjnl-2024-333729\">10.1136/gutjnl-2024-333729</a>.</br>\
 </br>\
 The raw data for each individual dataset is deposited in publicly available databases with the following IDs:</br>\
 </br>\

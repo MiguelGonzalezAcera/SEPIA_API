@@ -68,7 +68,7 @@ ui <- fluidPage(
   # Last break and bottom banner
   div(
     class = "footer",
-    textOutput("gitVers"),
+    # textOutput("gitVers"),
   )
 )
 
